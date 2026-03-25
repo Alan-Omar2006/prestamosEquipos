@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noticias – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .desc-cell { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.88em; color:#555; }
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html" class="active"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Gestión de Noticias</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Administra las noticias del sistema</p>
+        </div>
+        <a href="nueva_noticia.html" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Nueva Noticia</a>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaNoticias">
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>Título</th>
+              <th>Descripción</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script src="../../js/cloudinary-upload.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  async function cargarNoticias() {
+    try {
+      const noticias = await fetch(`${API_URL}/api/noticias/admin/all`, { headers: authHeaders() }).then(r => r.json());
+      const tbody = document.querySelector('#tablaNoticias tbody');
+      if (!Array.isArray(noticias)) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c62828">Error al cargar.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = noticias.length
+        ? noticias.map(n => `
+          <tr>
+            <td><img src="${n.imagen_url || '../../img/picture.png'}" onerror="this.src='../../img/picture.png'" style="width:50px;height:50px;object-fit:cover;border-radius:6px"></td>
+            <td style="font-weight:600;max-width:180px">${n.titulo}</td>
+            <td class="desc-cell" title="${(n.descripcion || '').replace(/"/g,'&quot;')}">${n.descripcion ? n.descripcion.substring(0,100) + (n.descripcion.length > 100 ? '...' : '') : '—'}</td>
+            <td>${fmtFecha(n.fecha_publicacion)}</td>
+            <td><span class="status ${n.activa ? 'status-activo' : 'status-inactivo'}">${n.activa ? 'Activa' : 'Inactiva'}</span></td>
+            <td class="td-actions">
+              <a href="editar_noticia.html?id=${n.id_noticia}" class="btn btn-outline btn-sm" title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+              <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarNoticia(${n.id_noticia},'${n.titulo.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>`)
+          .join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888">No hay noticias registradas.</td></tr>';
+    } catch(e) { console.error(e); }
+  }
+
+  async function eliminarNoticia(id, titulo) {
+    const conf = await Swal.fire({
+      title: '¿Eliminar noticia?',
+      text: `Se eliminará "${titulo}". Esta acción no se puede deshacer.`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res = await fetch(`${API_URL}/api/noticias/${id}`, {
+        method: 'DELETE', headers: authHeaders()
+      }).then(r => r.json());
+      showToast(res.message || res.error, res.message ? 'success' : 'error');
+      if (res.message) cargarNoticias();
+    } catch(e) {
+      showToast('Error de conexión.', 'error');
+    }
+  }
+
+  cargarNoticias();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

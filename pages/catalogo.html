@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo – Gestión de Préstamos UTHH</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/catalogo.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <a href="../index.html">
+        <img src="../img/logo.png" alt="UTHH Logo" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <span class="header-title">Gestión de Préstamos de Equipos y Accesorios de Cómputo</span>
+    <nav class="navigation">
+      <button class="btn-login-popup" id="openLoginBtn">Iniciar sesión</button>
+      <div id="userMenuHeader" style="display:none;align-items:center;gap:10px;position:relative">
+        <div style="position:relative;cursor:pointer;display:flex;align-items:center" id="userMenuToggle">
+          <img id="headerUserImg" src="../img/default_user.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
+          <span id="headerUserName" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
+          <i class="fas fa-chevron-down" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
+        </div>
+        <div id="userDropdownMenu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:190px;z-index:1000;overflow:hidden">
+          <div id="userDropdownName" style="padding:12px 16px 8px;font-size:.82em;color:#888;border-bottom:1px solid #eef0f8"></div>
+          <div id="userPanelLink" style="padding:4px 0"></div>
+          <div style="padding:4px 0;border-top:1px solid #eef0f8">
+            <button onclick="doLogout()" style="width:100%;text-align:left;padding:9px 16px;background:none;border:none;cursor:pointer;font-size:.85em;color:#c62828;font-weight:600">
+              <i class="fas fa-sign-out-alt" style="margin-right:8px"></i>Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <nav class="mini-menu" id="miniMenu">
+    <div class="mini-menu-container">
+      <a href="../index.html" class="mini-menu-item">
+        <i class="fas fa-home"></i><span>Inicio</span>
+      </a>
+      <a href="catalogo.html" class="mini-menu-item active">
+        <i class="fas fa-th"></i><span>Catálogo</span>
+      </a>
+      <a href="quienes_somos.html" class="mini-menu-item">
+        <i class="fas fa-info-circle"></i><span>Quiénes Somos</span>
+      </a>
+      <a href="mapa.html" class="mini-menu-item">
+        <i class="fas fa-sitemap"></i><span>Mapa de Navegación</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <div class="catalogo-page">
+
+      <div class="catalogo-hero">
+        <img src="../img/catalogo.png" alt="Catálogo"
+             onerror="this.outerHTML='<h1 style=\'font-family:var(--font-display);color:var(--c-primary);font-size:2.5rem\'>Catálogo</h1>'">
+      </div>
+
+      <div class="filtros-bar">
+
+        <div class="filtro-search">
+          <i class="fas fa-search"></i>
+          <input type="text" id="filtroTexto" placeholder="Buscar equipo o accesorio…" oninput="aplicarFiltros()">
+        </div>
+
+        <div class="filtro-group">
+          <label>Marca</label>
+          <select class="filtro-select" id="filtroMarca" onchange="aplicarFiltros()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div class="filtro-group">
+          <label>Disponibilidad</label>
+          <select class="filtro-select" id="filtroDisp" onchange="aplicarFiltros()">
+            <option value="">Todos</option>
+            <option value="disponible">Alta disponibilidad (&gt;3)</option>
+            <option value="limitado">Stock limitado (1–3)</option>
+          </select>
+        </div>
+
+        <label class="filtro-disponibles" title="Mostrar solo los disponibles">
+          <div class="toggle-switch" id="toggleDisponibles" onclick="toggleSoloDisponibles(this)"></div>
+          Solo disponibles
+        </label>
+
+        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+
+      <div class="resultados-count" id="resultadosCount"></div>
+
+      <div class="section-container" id="seccionEquipos">
+        <h2 class="section-title">
+          <i class="fas fa-laptop"></i> Equipos de Cómputo
+        </h2>
+        <div id="equiposGrid" class="productos-grid"></div>
+        <div id="equiposPag" class="pagination"></div>
+      </div>
+
+      <div class="section-container" id="seccionAccesorios">
+        <h2 class="section-title">
+          <i class="fas fa-keyboard"></i> Accesorios
+        </h2>
+        <div id="accesoriosGrid" class="productos-grid"></div>
+        <div id="accesoriosPag" class="pagination"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="mapa.html">Mapa de Navegación</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <div id="overlay"></div>
+  <div class="modal-login-wrapper" id="loginWrapper">
+    <button class="modal-close-btn" id="closeLoginBtn"><i class="fas fa-times"></i></button>
+    <div class="login-step" id="step-login">
+      <h2>Iniciar sesión</h2>
+      <div class="input-box">
+        <input type="email" placeholder=" ">
+        <label>Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <div class="input-box">
+        <input type="password" placeholder=" ">
+        <label>Contraseña</label>
+        <span class="input-icon"><i class="fas fa-lock"></i></span>
+      </div>
+      <button class="btn-submit">Iniciar sesión</button>
+      <div class="recuperar-link">
+        <a href="#" data-step="recuperar"><i class="fas fa-key"></i> ¿Olvidaste tu contraseña?</a>
+      </div>
+    </div>
+    <div class="login-step" id="step-recuperar" hidden>
+      <h2>Recuperar Contraseña</h2>
+      <p style="font-size:.85rem;color:var(--c-muted);margin-bottom:20px;text-align:center">Ingresa tu correo para continuar</p>
+      <div class="input-box">
+        <input type="email" placeholder=" ">
+        <label>Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <button class="btn-submit">Continuar</button>
+      <div class="recuperar-link"><a href="#" data-step="login"><i class="fas fa-arrow-left"></i> Volver</a></div>
+    </div>
+  </div>
+
+  <script>
+  
+  const API_URL = 'http://localhost:3000';
+
+  let _todosEquipos = [];
+  let _equiposComp  = [];
+  let _accesorios   = [];
+  let paginaEquipos    = 1;
+  let paginaAccesorios = 1;
+  let soloDisponibles  = false;
+  const ITEMS_PER_PAGE = 21;
+
+  async function cargarCatalogo() {
+    try {
+      const data = await fetch(`${API_URL}/api/inventario/disponibles`).then(r => r.json());
+      _todosEquipos = Array.isArray(data) ? data : [];
+    } catch(e) { _todosEquipos = []; }
+
+    _equiposComp = _todosEquipos.filter(e => e.tipo === 'EQUIPO DE COMPUTO');
+    _accesorios  = _todosEquipos.filter(e => e.tipo === 'ACCESORIO');
+
+    buildMarcas();
+    render();
+  }
+
+  function buildMarcas() {
+    const marcas = [...new Set(_todosEquipos.map(e => e.marca).filter(Boolean))].sort();
+    const sel = document.getElementById('filtroMarca');
+    sel.innerHTML = '<option value="">Todas</option>';
+    marcas.forEach(m => sel.innerHTML += `<option value="${m}">${m}</option>`);
+  }
+
+  function getFiltros() {
+    return {
+      texto: document.getElementById('filtroTexto').value.toLowerCase().trim(),
+      marca: document.getElementById('filtroMarca').value,
+      disp:  document.getElementById('filtroDisp').value,
+      solo:  soloDisponibles,
+    };
+  }
+
+  function filtrarItems(lista) {
+    const f = getFiltros();
+    return lista.filter(e => {
+      const nombre = (e.nombre_equipo || '').toLowerCase();
+      const desc   = (e.descripcion || '').toLowerCase();
+      const matchTexto = !f.texto || nombre.includes(f.texto) || desc.includes(f.texto);
+      const matchMarca = !f.marca || e.marca === f.marca;
+      const matchDisp  = !f.disp  ||
+        (f.disp === 'disponible' && e.disponibilidad > 3) ||
+        (f.disp === 'limitado'   && e.disponibilidad > 0 && e.disponibilidad <= 3);
+      const matchSolo  = !f.solo  || e.disponibilidad > 0;
+      return matchTexto && matchMarca && matchDisp && matchSolo;
+    });
+  }
+
+  function bClass(d) { return d > 3 ? 'available' : d > 0 ? 'limited' : 'none'; }
+  function bText(d)  { return d > 0 ? `${d} disp.` : 'Agotado'; }
+
+  function makeCard(e) {
+    return `
+      <a href="detalle.html?id=${e.id_equipo}" class="producto-card-link">
+        <div class="producto-card">
+          <div class="producto-img-wrap">
+            <img src="${e.imagen_url || '../img/picture.png'}"
+                 alt="${e.nombre_equipo}" loading="lazy"
+                 onerror="this.src='../img/picture.png'">
+            <div class="hover-overlay">
+              <i class="fas fa-search-plus"></i>
+              Ver detalles
+            </div>
+          </div>
+          <div class="product-info">
+            <div class="product-header">
+              <p class="product-name">${e.nombre_equipo}</p>
+              <span class="badge ${bClass(e.disponibilidad)}">${bText(e.disponibilidad)}</span>
+            </div>
+            <span class="product-desc">${e.descripcion || ''}</span>
+            <span class="product-meta">
+              Marca: <b>${e.marca || '—'}</b> &nbsp;·&nbsp; Modelo: <b>${e.modelo || '—'}</b>
+            </span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  function makePagination(page, total, fn) {
+    if (total <= 1) return '';
+    let html = `<button onclick="${fn}(${page-1})" ${page===1?'disabled':''}><i class="fas fa-chevron-left"></i></button>`;
+    for (let i = 1; i <= total; i++)
+      html += `<button class="${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`;
+    html += `<button onclick="${fn}(${page+1})" ${page===total?'disabled':''}><i class="fas fa-chevron-right"></i></button>`;
+    return html;
+  }
+
+  function renderGrid(filtrados, gridId, pagId, page, fnName) {
+    const start = (page-1) * ITEMS_PER_PAGE;
+    const slice = filtrados.slice(start, start + ITEMS_PER_PAGE);
+    const total = Math.ceil(filtrados.length / ITEMS_PER_PAGE);
+    const grid  = document.getElementById(gridId);
+
+    grid.innerHTML = slice.length
+      ? slice.map(makeCard).join('')
+      : `<div class="no-productos"><i class="fas fa-search"></i> No se encontraron productos con los filtros seleccionados.</div>`;
+
+    document.getElementById(pagId).innerHTML = makePagination(page, total, fnName);
+    return filtrados.length;
+  }
+
+  function aplicarFiltros() { paginaEquipos = 1; paginaAccesorios = 1; render(); }
+
+  function render() {
+    const filtEquipos    = filtrarItems(_equiposComp);
+    const filtAccesorios = filtrarItems(_accesorios);
+
+    renderGrid(filtEquipos,    'equiposGrid',    'equiposPag',    paginaEquipos,    'goEquipos');
+    renderGrid(filtAccesorios, 'accesoriosGrid', 'accesoriosPag', paginaAccesorios, 'goAccesorios');
+
+    const total = filtEquipos.length + filtAccesorios.length;
+    document.getElementById('resultadosCount').innerHTML =
+      `Mostrando <span>${total}</span> resultado${total !== 1 ? 's' : ''}`;
+
+    document.getElementById('seccionEquipos').style.display    = filtEquipos.length    ? '' : 'none';
+    document.getElementById('seccionAccesorios').style.display = filtAccesorios.length ? '' : 'none';
+
+    if (total === 0) {
+      document.getElementById('resultadosCount').innerHTML = '<span>0</span> resultados – prueba con otros filtros';
+      document.getElementById('seccionEquipos').style.display = '';
+      document.getElementById('equiposGrid').innerHTML = `<div class="no-productos"><i class="fas fa-search"></i> No se encontraron productos.</div>`;
+      document.getElementById('equiposPag').innerHTML = '';
+    }
+  }
+
+  window.goEquipos    = (p) => { paginaEquipos = p;    render(); };
+  window.goAccesorios = (p) => { paginaAccesorios = p; render(); };
+
+  function toggleSoloDisponibles(el) {
+    soloDisponibles = !soloDisponibles;
+    el.classList.toggle('on', soloDisponibles);
+    aplicarFiltros();
+  }
+
+  function limpiarFiltros() {
+    document.getElementById('filtroTexto').value = '';
+    document.getElementById('filtroMarca').value = '';
+    document.getElementById('filtroDisp').value  = '';
+    soloDisponibles = false;
+    document.getElementById('toggleDisponibles').classList.remove('on');
+    aplicarFiltros();
+  }
+
+  document.getElementById('openLoginBtn')?.addEventListener('click', () => {
+    document.getElementById('overlay').classList.add('active');
+    document.getElementById('loginWrapper').classList.add('active');
+  });
+  document.getElementById('closeLoginBtn')?.addEventListener('click', () => {
+    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('loginWrapper').classList.remove('active');
+  });
+  document.getElementById('overlay')?.addEventListener('click', () => {
+    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('loginWrapper').classList.remove('active');
+  });
+  document.querySelectorAll('[data-step]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelectorAll('.login-step').forEach(el => el.hidden = true);
+      document.getElementById('step-' + btn.dataset.step).hidden = false;
+    });
+  });
+
+  cargarCatalogo();
+  </script>
+
+  <script>
+  (function() {
+    const ROOT = '../';
+    function initSessionNav() {
+      const userData = sessionStorage.getItem('appUser');
+      const loginBtn = document.getElementById('openLoginBtn');
+      const userMenu = document.getElementById('userMenuHeader');
+      if (!loginBtn || !userMenu) return;
+      if (userData) {
+        const u = JSON.parse(userData);
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('headerUserName').textContent = u.name;
+        document.getElementById('headerUserImg').src = u.type === 'admin'
+          ? ROOT + 'img/default_admin.png' : ROOT + 'img/default_user.png';
+        if(sessionStorage.getItem('token')) fetch(`${API_URL}/api/auth/perfil`,{headers:{'Authorization':'Bearer '+sessionStorage.getItem('token')}}).then(r=>r.json()).then(p=>{if(p&&p.imagen_url)document.getElementById('headerUserImg').src=p.imagen_url;}).catch(()=>{});
+        document.getElementById('userDropdownName').textContent = u.name;
+        const href  = u.type === 'admin' ? ROOT + 'pages/admin/dashboard.html' : ROOT + 'pages/usuario/mis_prestamos.html';
+        const label = u.type === 'admin' ? 'Panel de administración' : 'Mis préstamos';
+        const icon  = u.type === 'admin' ? 'fa-tachometer-alt' : 'fa-box';
+        document.getElementById('userPanelLink').innerHTML =
+          '<a href="' + href + '" style="display:block;padding:9px 16px;font-size:.85em;color:#1a237e;font-weight:600;text-decoration:none">'
+          + '<i class="fas ' + icon + '" style="margin-right:8px"></i>' + label + '</a>';
+      } else {
+        loginBtn.style.display = '';
+        userMenu.style.display = 'none';
+      }
+    }
+    document.getElementById('userMenuToggle')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = 'none';
+    });
+    initSessionNav();
+  })();
+  function doLogout() {
+    if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) return;
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('appUser');
+    window.location.href = '../index.html';
+  }
+
+  (function() {
+    const ROOT = '../';
+    const API_URL_L = 'http://localhost:3000';
+
+    const loginStep = document.getElementById('step-login');
+    if (loginStep) {
+      const inputs = loginStep.querySelectorAll('input');
+      if (inputs[0] && !inputs[0].id) inputs[0].id = 'lemail';
+      if (inputs[1] && !inputs[1].id) inputs[1].id = 'lpassword';
+      
+      if (!loginStep.querySelector('#loginError')) {
+        const p = document.createElement('p');
+        p.id = 'loginError';
+        p.style.cssText = 'color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px';
+        loginStep.appendChild(p);
+      }
+    }
+
+    async function handleLogin(e) {
+      e && e.preventDefault && e.preventDefault();
+      const correo    = document.getElementById('lemail')?.value.trim();
+      const contrasena = document.getElementById('lpassword')?.value;
+      const errorEl   = document.getElementById('loginError');
+      const btn       = document.querySelector('#step-login .btn-submit');
+      if (!correo || !contrasena) {
+        if (errorEl) errorEl.textContent = 'Ingresa correo y contraseña.';
+        return;
+      }
+      if (errorEl) errorEl.textContent = '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+      try {
+        const data = await fetch(API_URL_L + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
+        }).then(r => r.json());
+        if (data.token) {
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('appUser', JSON.stringify({
+            type: data.usuario.rol,
+            name: data.usuario.nombre,
+            id:   data.usuario.id,
+          }));
+          window.location.href = data.usuario.rol === 'admin'
+            ? ROOT + 'pages/admin/dashboard.html'
+            : ROOT + 'pages/usuario/mis_prestamos.html';
+        } else {
+          if (errorEl) errorEl.textContent = data.message || 'Credenciales incorrectas.';
+        }
+      } catch(err) {
+        if (errorEl) errorEl.textContent = 'Error de conexión con el servidor.';
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Iniciar sesión'; }
+      }
+    }
+
+    document.querySelector('#step-login .btn-submit')?.addEventListener('click', handleLogin);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.getElementById('loginWrapper')?.classList.contains('active')) {
+        handleLogin();
+      }
+    });
+  })();
+  </script>
+<script src="../js/mapa-uthh.js"></script>
+</body>
+</html>

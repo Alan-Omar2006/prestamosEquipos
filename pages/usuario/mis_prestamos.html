@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Préstamos – Sistema de Préstamos UTHH</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    
+    .mp-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 40px 56px;
+    }
+
+    .mp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(26,35,126,.1);
+    }
+
+    .mp-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mp-title-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .mp-title h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .mp-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-light);
+      border-radius: 30px;
+      padding: 4px;
+    }
+    .mp-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: .84em;
+      font-weight: 600;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .mp-tab-btn i { font-size: .8rem; }
+    .mp-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .mp-tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px; height: 20px;
+      padding: 0 5px;
+      border-radius: 20px;
+      font-size: .72em;
+      font-weight: 700;
+      background: rgba(26,35,126,.1);
+      color: var(--primary);
+      transition: all .25s;
+    }
+    .mp-tab-btn.active .mp-tab-count {
+      background: rgba(255,255,255,.25);
+      color: #fff;
+    }
+
+    .mp-panel { display: none; }
+    .mp-panel.active { display: block; }
+
+    .mp-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      gap: 12px;
+      text-align: center;
+    }
+    .mp-empty i {
+      font-size: 2.8rem;
+      opacity: .25;
+      color: var(--primary);
+    }
+    .mp-empty p { font-size: .9rem; margin: 0; }
+    .mp-empty span { font-size: .78rem; opacity: .7; }
+
+    .mp-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+      gap: 18px;
+    }
+    .mp-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1.5px solid #eef0f8;
+    }
+    .mp-card-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      padding: 14px 18px;
+      color: #fff;
+    }
+    .mp-card-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .mp-card-num { font-size: .75em; font-weight: 700; opacity: .75; }
+    .mp-card-body { padding: 16px 18px; }
+    .mp-card-name { font-size: 1rem; font-weight: 700; }
+    .mp-card-dates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mp-card-date-label { font-size: .75em; color: var(--text-muted); display: block; margin-bottom: 2px; }
+    .mp-card-date-val { font-size: .85em; font-weight: 600; }
+    .mp-card-countdown {
+      background: var(--bg-light);
+      border-radius: 8px;
+      padding: 9px 13px;
+      font-size: .8em;
+      color: var(--text-muted);
+    }
+    .mp-card-countdown i { margin-right: 5px; }
+
+    .mp-resumen {
+      margin-top: 16px;
+      font-size: .8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div id="header-placeholder"></div>
+
+<main style="margin-top:85px">
+  <div class="admin-layout">
+
+    <aside class="sidebar" id="userSidebar">
+      <span class="sidebar-label">Mi Cuenta</span>
+      <a href="mis_prestamos.html" class="active"><i class="fas fa-box-open"></i> Mis Préstamos</a>
+      <a href="perfil.html"><i class="fas fa-user"></i> Mi Perfil</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Explorar</span>
+      <a href="../../pages/catalogo.html"><i class="fas fa-laptop"></i> Catálogo</a>
+      <a href="../../index.html"><i class="fas fa-home"></i> Inicio</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Sesión</span>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="mp-page">
+
+    <div class="mp-header">
+      <div class="mp-title">
+        <div class="mp-title-icon"><i class="fas fa-box-open"></i></div>
+        <h1>Mis Préstamos</h1>
+      </div>
+
+      <div class="mp-tabs" id="tabsContainer">
+        <button class="mp-tab-btn active" data-tab="0">
+          <i class="fas fa-clock"></i> Activos
+          <span class="mp-tab-count" id="countActivos">0</span>
+        </button>
+        <button class="mp-tab-btn" data-tab="1">
+          <i class="fas fa-history"></i> Historial
+          <span class="mp-tab-count" id="countHistorial">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mp-panel active" id="panel0">
+      <div class="mp-cards-grid" id="contActivos">
+        <p style="color:var(--text-muted)">Cargando...</p>
+      </div>
+      <p class="mp-resumen" id="textoActivos"></p>
+    </div>
+
+    <div class="mp-panel" id="panel1">
+      <div class="table-wrapper">
+        <table id="tablaHistorial">
+          <thead>
+            <tr><th>#</th><th>Equipo</th><th>Inicio</th><th>Devolución</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+      </div>
+    </div><!-- /admin-content -->
+  </div><!-- /admin-layout -->
+</main>
+
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Mi Cuenta</h4>
+        <ul>
+          <li><a href="mis_prestamos.html">Mis Préstamos</a></li>
+          <li><a href="perfil.html">Mi Perfil</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerUsuario();
+  inyectarHeaderUsuario(user);
+
+  async function cargarMisPrestamos() {
+    try {
+      const prestamos = await fetch(`${API_URL}/api/prestamos/usuario/${user.id}`, {
+        headers: authHeaders()
+      }).then(r => r.json());
+
+      if (!Array.isArray(prestamos)) return;
+
+      const activos   = prestamos.filter(p => p.estado_prestamo === 'ACTIVO' || p.estado_prestamo === 'EN PROCESO');
+      const historial = prestamos;
+
+      document.getElementById('countActivos').textContent   = activos.length;
+      document.getElementById('countHistorial').textContent = historial.length;
+
+      const hoy = new Date();
+      const contActivos = document.getElementById('contActivos');
+      if (activos.length) {
+        contActivos.innerHTML = activos.map(p => {
+          const dias = p.fecha_devolucion
+            ? Math.ceil((new Date(p.fecha_devolucion) - hoy) / 86400000)
+            : null;
+          const alertColor = dias !== null && dias <= 2 ? '#c62828' : 'var(--primary)';
+          return `
+            <div class="mp-card">
+              <div class="mp-card-header">
+                <div class="mp-card-header-top">
+                  <span class="mp-card-num">PRÉSTAMO #${p.id_prestamo}</span>
+                  <span class="status ${estadoClase(p.estado_prestamo)}" style="background:rgba(255,255,255,.2);color:#fff">${p.estado_prestamo}</span>
+                </div>
+                <div class="mp-card-name">${p.nombre_equipo || 'N/A'}</div>
+              </div>
+              <div class="mp-card-body">
+                <div class="mp-card-dates">
+                  <div>
+                    <span class="mp-card-date-label">Inicio</span>
+                    <span class="mp-card-date-val">${fmtFecha(p.fecha_prestamo)}</span>
+                  </div>
+                  <div>
+                    <span class="mp-card-date-label">Devolución</span>
+                    <span class="mp-card-date-val">${fmtFecha(p.fecha_devolucion)}</span>
+                  </div>
+                </div>
+                ${dias !== null ? `
+                <div class="mp-card-countdown">
+                  <i class="fas fa-clock"></i>
+                  ${dias > 0
+                    ? `Quedan <strong style="color:${alertColor}">${dias} día${dias !== 1 ? 's' : ''}</strong> para la devolución`
+                    : `<strong style="color:#c62828">Vencido</strong>`}
+                </div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+      } else {
+        contActivos.innerHTML = `
+          <div class="mp-empty" style="grid-column:1/-1">
+            <i class="fas fa-inbox"></i>
+            <p>No tienes préstamos activos</p>
+            <span>Cuando tengas un préstamo activo aparecerá aquí</span>
+          </div>`;
+      }
+
+      document.getElementById('textoActivos').innerHTML = activos.length
+        ? `<i class="fas fa-info-circle"></i> Tienes ${activos.length} préstamo${activos.length !== 1 ? 's' : ''} activo${activos.length !== 1 ? 's' : ''}.`
+        : '';
+
+      const tbody = document.querySelector('#tablaHistorial tbody');
+      tbody.innerHTML = historial.length
+        ? historial.map(p => `
+          <tr>
+            <td>${p.id_prestamo}</td>
+            <td>${p.nombre_equipo || 'N/A'}</td>
+            <td>${fmtFecha(p.fecha_prestamo)}</td>
+            <td>${fmtFecha(p.fecha_devolucion)}</td>
+            <td><span class="status ${estadoClase(p.estado_prestamo)}">${p.estado_prestamo || 'N/A'}</span></td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;padding:32px;color:#888">Sin historial de préstamos.</td></tr>';
+
+    } catch(e) { console.error(e); }
+  }
+
+  document.querySelectorAll('.mp-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = btn.dataset.tab;
+      document.querySelectorAll('.mp-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.mp-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel${idx}`)?.classList.add('active');
+    });
+  });
+
+  cargarMisPrestamos();
+</script>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Préstamos – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .obs-cell { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.88em; color:#555; }
+
+    .btn-generar-pdf {
+      position: fixed;
+      bottom: 32px;
+      right: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 26px;
+      background: #1a237e;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(26,35,126,.45);
+      transition: all .25s;
+      z-index: 999;
+      font-family: "Poppins", sans-serif;
+      letter-spacing: .2px;
+    }
+    .btn-generar-pdf:hover {
+      background: #0d1257;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 32px rgba(26,35,126,.55);
+    }
+    .btn-generar-pdf i { font-size: 1.05rem; }
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html" class="active"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Gestión de Préstamos</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Administra todos los préstamos del sistema</p>
+        </div>
+        <a href="nuevo_prestamo.html" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Nuevo Préstamo</a>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="tabs">
+          <button class="tab-btn active" data-filtro="">Todos</button>
+          <button class="tab-btn" data-filtro="ACTIVO">Activos</button>
+          <button class="tab-btn" data-filtro="EN PROCESO">En Proceso</button>
+          <button class="tab-btn" data-filtro="VENCIDO">Vencidos</button>
+          <button class="tab-btn" data-filtro="DEVUELTO">Devueltos</button>
+          <button class="tab-btn" data-filtro="CANCELADO">Cancelados</button>
+        </div>
+      </div>
+
+      <div class="filter-row" style="margin-bottom:16px">
+        <div class="search-bar" style="flex:1;max-width:340px">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchPres" placeholder="Buscar por usuario o equipo...">
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="tablaPrestamos">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Equipo</th>
+              <th>Fecha Préstamo</th>
+              <th>Fecha Devolución</th>
+              <th>Estado</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  let _todos = [];
+  let _filtroActivo = '';
+
+  async function cargarPrestamos() {
+    try {
+      const data = await fetch(`${API_URL}/api/prestamos`, { headers: authHeaders() }).then(r => r.json());
+      _todos = Array.isArray(data) ? data : [];
+      aplicarFiltro(_filtroActivo);
+    } catch(e) { console.error(e); }
+  }
+
+  function aplicarFiltro(filtro) {
+    _filtroActivo = filtro;
+    const hoy = new Date().toISOString().split('T')[0];
+    let lista = _todos;
+
+    if (filtro === 'VENCIDO') {
+      lista = _todos.filter(p => p.estado_prestamo === 'ACTIVO' && p.fecha_devolucion && p.fecha_devolucion.split('T')[0] < hoy);
+    } else if (filtro) {
+      lista = _todos.filter(p => p.estado_prestamo === filtro);
+    }
+
+    const q = document.getElementById('searchPres').value.toLowerCase();
+    if (q) lista = lista.filter(p => (p.usuario||'').toLowerCase().includes(q) || (p.nombre_equipo||'').toLowerCase().includes(q));
+
+    renderTabla(lista);
+  }
+
+  function renderTabla(lista) {
+    const tbody = document.querySelector('#tablaPrestamos tbody');
+    tbody.innerHTML = lista.length
+      ? lista.map(p => `
+        <tr>
+          <td>${p.usuario || '<span style="color:#aaa">Sin usuario</span>'}</td>
+          <td>${p.nombre_equipo || '<span style="color:#aaa">Sin equipo</span>'}</td>
+          <td>${fmtFecha(p.fecha_prestamo)}</td>
+          <td>${fmtFecha(p.fecha_devolucion)}</td>
+          <td><span class="status ${estadoClase(p.estado_prestamo)}">${p.estado_prestamo||'N/A'}</span></td>
+          <td class="obs-cell" title="${(p.observaciones||'').replace(/"/g,'&quot;')}">${p.observaciones || '—'}</td>
+          <td class="td-actions">
+            <a href="editar_prestamo.html?id=${p.id_prestamo}" class="btn btn-outline btn-sm" title="Editar"><i class="fas fa-edit"></i> Editar</a>
+            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarPrestamo(${p.id_prestamo}, '${(p.usuario||'este préstamo').replace(/'/g,"\\'")}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`)
+      .join('')
+      : '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888">No hay préstamos registrados.</td></tr>';
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      aplicarFiltro(btn.dataset.filtro);
+    });
+  });
+
+  document.getElementById('searchPres').addEventListener('input', () => aplicarFiltro(_filtroActivo));
+
+  async function eliminarPrestamo(id, usuario) {
+    const conf = await Swal.fire({
+      title: '¿Eliminar préstamo?',
+      text: `Se eliminará el préstamo de "${usuario}". Esta acción no se puede deshacer.`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res = await fetch(`${API_URL}/api/prestamos/${id}`, {
+        method: 'DELETE', headers: authHeaders()
+      }).then(r => r.json());
+      showToast(res.message || res.error, res.message ? 'success' : 'error');
+      if (res.message) cargarPrestamos();
+    } catch(e) { showToast('Error de conexión.', 'error'); }
+  }
+
+  cargarPrestamos();
+</script>
+
+<button class="btn-generar-pdf" onclick="generarReportePDF()">
+  <i class="fas fa-file-pdf"></i> Generar Reporte PDF
+</button>
+
+<script>
+
+async function generarReportePDF() {
+  const filas = Array.from(document.querySelectorAll('#tablaPrestamos tbody tr'))
+    .filter(r => !r.querySelector('td[colspan]'));
+
+  if (filas.length === 0) {
+    showToast('No hay préstamos para exportar.', 'warning');
+    return;
+  }
+
+  const filtroLabel = document.querySelector('.tab-btn.active')?.textContent?.trim() || 'Todos';
+  const ahora       = new Date();
+  const fechaStr    = ahora.toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  const horaStr     = ahora.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+
+  const total     = filas.length;
+  const activos   = filas.filter(r => r.querySelector('.status-activo')).length;
+  const vencidos  = filas.filter(r => r.querySelector('.status-vencido')).length;
+  const devueltos = filas.filter(r => r.querySelector('.status-devuelto')).length;
+
+  const filasHTML = filas.map((row, i) => {
+    const celdas = row.querySelectorAll('td');
+    const estado = celdas[4]?.textContent?.trim() || '—';
+    let estadoColor = '#555';
+    if (estado.includes('ACTIVO'))   estadoColor = '#2e7d32';
+    if (estado.includes('VENCIDO'))  estadoColor = '#c62828';
+    if (estado.includes('DEVUELTO')) estadoColor = '#1565c0';
+    if (estado.includes('PROCESO'))  estadoColor = '#e65100';
+    return `
+      <tr style="background:${i % 2 === 0 ? '#fff' : '#f5f7fc'}">
+        <td style="text-align:center;color:#888">${i + 1}</td>
+        <td>${celdas[0]?.textContent?.trim() || '—'}</td>
+        <td>${celdas[1]?.textContent?.trim() || '—'}</td>
+        <td style="text-align:center">${celdas[2]?.textContent?.trim() || '—'}</td>
+        <td style="text-align:center">${celdas[3]?.textContent?.trim() || '—'}</td>
+        <td style="text-align:center;font-weight:700;color:${estadoColor}">${estado}</td>
+        <td style="color:#666;font-size:11px">${celdas[5]?.textContent?.trim() || '—'}</td>
+      </tr>`;
+  }).join('');
+
+  const htmlContenido = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11px;
+      color: #000;
+      background: #fff;
+      padding: 28px 36px;
+    }
+
+    .membrete {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #000;
+      margin-bottom: 6px;
+    }
+    .membrete-izq { max-width: 70%; }
+    .membrete-izq .inst {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      line-height: 1.4;
+    }
+    .membrete-izq .dep {
+      font-size: 10px;
+      margin-top: 3px;
+      color: #333;
+    }
+    .membrete-der {
+      text-align: right;
+      font-size: 9.5px;
+      color: #444;
+      line-height: 1.8;
+    }
+
+    .linea-roja { height: 3px; background: #8b0000; margin-bottom: 14px; }
+
+    .titulo-doc {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .titulo-doc h1 {
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .titulo-doc .folio {
+      font-size: 9px;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    .datos-reporte {
+      border: 1px solid #bbb;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      background: #fafafa;
+    }
+    .datos-reporte .campo { line-height: 1.9; }
+    .datos-reporte .campo span { font-weight: bold; }
+
+    .resumen-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 10px;
+    }
+    .resumen-tabla th {
+      background: #1a237e;
+      color: #fff;
+      padding: 6px 10px;
+      font-weight: bold;
+      text-align: center;
+      border: 1px solid #1a237e;
+    }
+    .resumen-tabla td {
+      padding: 6px 10px;
+      text-align: center;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+
+    .titulo-tabla {
+      font-size: 10.5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 5px;
+      border-left: 3px solid #1a237e;
+      padding-left: 7px;
+    }
+    table.principal {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-bottom: 20px;
+    }
+    table.principal thead tr {
+      background: #1a237e;
+      color: #fff;
+    }
+    table.principal thead th {
+      padding: 7px 8px;
+      font-weight: bold;
+      border: 1px solid #1a237e;
+      text-align: left;
+    }
+    table.principal tbody td {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+    table.principal tbody tr:nth-child(even) td {
+      background: #f7f7f7;
+    }
+
+    .firmas {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+      margin-bottom: 10px;
+    }
+    .firma {
+      text-align: center;
+      width: 180px;
+    }
+    .firma .linea-firma {
+      border-top: 1px solid #000;
+      margin-bottom: 4px;
+    }
+    .firma .nombre { font-size: 10px; font-weight: bold; }
+    .firma .cargo  { font-size: 9px; color: #555; }
+
+    .pie {
+      border-top: 1px solid #999;
+      padding-top: 5px;
+      font-size: 8.5px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="membrete">
+    <div class="membrete-izq">
+      <div class="inst">Universidad Tecnológica de la Huasteca Hidalguense</div>
+      <div class="dep">Departamento de Tecnologías de la Información · Sistema de Gestión de Préstamos</div>
+    </div>
+    <div class="membrete-der">
+      <div>Folio: RPR-${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}${String(ahora.getDate()).padStart(2,'0')}</div>
+      <div>Fecha: ${fechaStr}</div>
+      <div>Hora: ${horaStr}</div>
+    </div>
+  </div>
+  <div class="linea-roja"></div>
+
+  <div class="titulo-doc">
+    <h1>Reporte de Gestión de Préstamos de Equipos</h1>
+    <div class="folio">Documento generado automáticamente por el Sistema de Préstamos UTHH</div>
+  </div>
+
+  <div class="datos-reporte">
+    <div class="campo">
+      <div>Período consultado: <span>Todos los registros</span></div>
+      <div>Filtro aplicado: <span>${filtroLabel}</span></div>
+    </div>
+    <div class="campo">
+      <div>Total de registros: <span>${total}</span></div>
+      <div>Generado por: <span>Administrador del sistema</span></div>
+    </div>
+  </div>
+
+  <div class="titulo-tabla">Resumen de estados</div>
+  <table class="resumen-tabla">
+    <thead>
+      <tr>
+        <th>Total</th>
+        <th>Activos</th>
+        <th>En Proceso</th>
+        <th>Vencidos</th>
+        <th>Devueltos</th>
+        <th>Cancelados</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${total}</td>
+        <td>${activos}</td>
+        <td>${filas.filter(r => r.querySelector('.status-proceso')).length}</td>
+        <td>${vencidos}</td>
+        <td>${devueltos}</td>
+        <td>${filas.filter(r => r.querySelector('.status-cancelado')).length}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="titulo-tabla">Detalle de préstamos</div>
+  <table class="principal">
+    <thead>
+      <tr>
+        <th style="width:25px">#</th>
+        <th>Usuario</th>
+        <th>Equipo</th>
+        <th style="width:85px">Fecha Préstamo</th>
+        <th style="width:85px">Fecha Devolución</th>
+        <th style="width:75px">Estado</th>
+        <th>Observaciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filasHTML}
+    </tbody>
+  </table>
+
+  <div class="firmas">
+    <div class="firma">
+      <div class="linea-firma"></div>
+      <div class="nombre">Responsable de Préstamos</div>
+      <div class="cargo">Departamento de TI · UTHH</div>
+    </div>
+    <div class="firma">
+      <div class="linea-firma"></div>
+      <div class="nombre">Vo. Bo. Administrador</div>
+      <div class="cargo">Sistema de Gestión · UTHH</div>
+    </div>
+  </div>
+
+  <div class="pie">
+    <span>UTHH · Carretera Huejutla - Chalahuiyapa S/N Km. 3.5, Huejutla de Reyes, Hgo.</span>
+    <span>Este documento es generado automáticamente y tiene validez informativa.</span>
+  </div>
+
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>`;
+
+  const btn = document.querySelector('.btn-generar-pdf');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+  try {
+    const response = await fetch(`${API_URL}/api/pdf/reporte-prestamos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ html: htmlContenido })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Error en PDFShift API');
+    }
+
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href     = url;
+    link.download = `reporte_prestamos_${ahora.toISOString().slice(0,10)}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    showToast('Reporte generado y descargado correctamente', 'success');
+
+  } catch(err) {
+    console.error('PDFShift error:', err);
+    showToast('Error al generar el PDF: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar Reporte PDF';
+  }
+}
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiénes Somos – UTHH</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .qs-page { padding: 52px 48px 80px; max-width: 960px; margin: 0 auto; }
+    .qs-hero { text-align: center; margin-bottom: 52px; }
+    .qs-hero h1 { font-family: var(--font-display); font-size: 2.8rem; color: var(--c-primary); margin-bottom: 14px; }
+    .qs-hero p  { color: var(--c-muted); font-size: 1.05rem; max-width: 620px; margin: 0 auto; line-height: 1.7; }
+    .qs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 56px; }
+    .qs-card { background: var(--c-surface); border-radius: var(--radius-lg); padding: 32px 28px; box-shadow: var(--shadow-sm); border: 1.5px solid var(--c-border); text-align: center; transition: transform var(--transition), box-shadow var(--transition); }
+    .qs-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+    .qs-card i { font-size: 2.4rem; color: var(--c-primary); margin-bottom: 14px; }
+    .qs-card h3 { font-family: var(--font-display); font-size: 1.1rem; color: var(--c-primary); margin-bottom: 10px; }
+    .qs-card p { font-size: .875rem; color: var(--c-muted); line-height: 1.6; }
+    .qs-about { background: var(--c-surface); border-radius: var(--radius-lg); padding: 40px 44px; box-shadow: var(--shadow-sm); border: 1.5px solid var(--c-border); }
+    .qs-about h2 { font-family: var(--font-display); font-size: 1.6rem; color: var(--c-primary); margin-bottom: 18px; }
+    .qs-about p  { font-size: .92rem; color: #4b5563; line-height: 1.8; margin-bottom: 14px; }
+    @media(max-width:768px){ .qs-page{padding:32px 18px 52px;} .qs-about{padding:28px 22px;} .qs-hero h1{font-size:2rem;} }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo"><a href="../index.html"><img src="../img/logo.png" alt="UTHH Logo" onerror="this.style.display='none'"></a></div>
+    <span class="header-title">Gestión de Préstamos de Equipos y Accesorios de Cómputo</span>
+    <nav class="navigation">
+      <button class="btn-login-popup" id="openLoginBtn">Iniciar sesión</button>
+      <div id="userMenuHeader" style="display:none;align-items:center;gap:10px;position:relative">
+        <div style="position:relative;cursor:pointer;display:flex;align-items:center" id="userMenuToggle">
+          <img id="headerUserImg" src="../img/default_user.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
+          <span id="headerUserName" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
+          <i class="fas fa-chevron-down" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
+        </div>
+        <div id="userDropdownMenu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:190px;z-index:1000;overflow:hidden">
+          <div id="userDropdownName" style="padding:12px 16px 8px;font-size:.82em;color:#888;border-bottom:1px solid #eef0f8"></div>
+          <div id="userPanelLink" style="padding:4px 0"></div>
+          <div style="padding:4px 0;border-top:1px solid #eef0f8">
+            <button onclick="doLogout()" style="width:100%;text-align:left;padding:9px 16px;background:none;border:none;cursor:pointer;font-size:.85em;color:#c62828;font-weight:600">
+              <i class="fas fa-sign-out-alt" style="margin-right:8px"></i>Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <nav class="mini-menu" id="miniMenu">
+    <div class="mini-menu-container">
+      <a href="../index.html" class="mini-menu-item"><i class="fas fa-home"></i><span>Inicio</span></a>
+      <a href="catalogo.html" class="mini-menu-item"><i class="fas fa-th"></i><span>Catálogo</span></a>
+      <a href="quienes_somos.html" class="mini-menu-item active"><i class="fas fa-info-circle"></i><span>Quiénes Somos</span></a>
+      <a href="mapa.html" class="mini-menu-item"><i class="fas fa-sitemap"></i><span>Mapa de Navegación</span></a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <div class="qs-page">
+
+      <div class="qs-hero">
+        <h1>¿Quiénes Somos?</h1>
+        <p>Sistema de gestión de préstamos de equipos y accesorios de cómputo de la Universidad Tecnológica de la Huasteca Hidalguense.</p>
+      </div>
+
+      <div class="qs-grid">
+        <div class="qs-card">
+          <i class="fas fa-university"></i>
+          <h3>Institución</h3>
+          <p>UTHH – Universidad Tecnológica de la Huasteca Hidalguense, comprometida con el acceso a la tecnología para todos sus estudiantes.</p>
+        </div>
+        <div class="qs-card">
+          <i class="fas fa-laptop"></i>
+          <h3>Equipos</h3>
+          <p>Laptops, computadoras de escritorio, monitores, teclados, ratones y más accesorios disponibles para préstamo.</p>
+        </div>
+        <div class="qs-card">
+          <i class="fas fa-users"></i>
+          <h3>Comunidad</h3>
+          <p>Servicio disponible para toda la comunidad universitaria: estudiantes, docentes y personal administrativo.</p>
+        </div>
+        <div class="qs-card">
+          <i class="fas fa-clock"></i>
+          <h3>Horario</h3>
+          <p>Lunes a viernes de 8:00 a 20:00 hrs. Sábados de 9:00 a 14:00 hrs. Sujeto a disponibilidad de equipos.</p>
+        </div>
+      </div>
+
+      <div class="qs-about">
+        <h2>Sobre el sistema</h2>
+        <p>Esta plataforma digital facilita la consulta del inventario de equipos de cómputo disponibles para préstamo en la UTHH. Los alumnos pueden visualizar los equipos disponibles, sus características técnicas y el estado de disponibilidad antes de acudir personalmente al departamento.</p>
+        <p>El préstamo físico de equipos se realiza presentando credencial universitaria vigente en las instalaciones del departamento de Tecnologías de la Información. No es posible realizar reservas en línea en esta fase del sistema.</p>
+        <p>Para dudas o reportes, contáctanos en el edificio central de Servicios Estudiantiles o llama al <strong>789 896 2083</strong>.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="mapa.html">Mapa de Navegación</a></li>
+          <li><a href="catalogo.html">Catálogo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <div id="overlay"></div>
+  <div class="modal-login-wrapper" id="loginWrapper">
+    <button class="modal-close-btn" id="closeLoginBtn"><i class="fas fa-times"></i></button>
+    <div class="login-step" id="step-login">
+      <h2>Iniciar sesión</h2>
+      <div class="input-box"><input type="email" placeholder=" "><label>Correo electrónico</label><span class="input-icon"><i class="fas fa-envelope"></i></span></div>
+      <div class="input-box"><input type="password" placeholder=" "><label>Contraseña</label><span class="input-icon"><i class="fas fa-lock"></i></span></div>
+      <button class="btn-submit">Iniciar sesión</button>
+      <div class="recuperar-link"><a href="#" data-step="recuperar"><i class="fas fa-key"></i> ¿Olvidaste tu contraseña?</a></div>
+    </div>
+    <div class="login-step" id="step-recuperar" hidden>
+      <h2>Recuperar Contraseña</h2>
+      <div class="input-box"><input type="email" placeholder=" "><label>Correo</label><span class="input-icon"><i class="fas fa-envelope"></i></span></div>
+      <button class="btn-submit">Continuar</button>
+      <div class="recuperar-link"><a href="#" data-step="login"><i class="fas fa-arrow-left"></i> Volver</a></div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    document.getElementById('openLoginBtn')?.addEventListener('click', () => { document.getElementById('overlay').classList.add('active'); document.getElementById('loginWrapper').classList.add('active'); });
+    document.getElementById('closeLoginBtn')?.addEventListener('click', () => { document.getElementById('overlay').classList.remove('active'); document.getElementById('loginWrapper').classList.remove('active'); });
+    document.getElementById('overlay')?.addEventListener('click', () => { document.getElementById('overlay').classList.remove('active'); document.getElementById('loginWrapper').classList.remove('active'); });
+    document.querySelectorAll('[data-step]').forEach(btn => { btn.addEventListener('click', e => { e.preventDefault(); document.querySelectorAll('.login-step').forEach(el => el.hidden = true); document.getElementById('step-' + btn.dataset.step).hidden = false; }); });
+  </script>
+
+  <script>
+  (function() {
+    const ROOT = '../';
+    const API_URL = 'http://localhost:3000';
+    function initSessionNav() {
+      const userData = sessionStorage.getItem('appUser');
+      const loginBtn = document.getElementById('openLoginBtn');
+      const userMenu = document.getElementById('userMenuHeader');
+      if (!loginBtn || !userMenu) return;
+      if (userData) {
+        const u = JSON.parse(userData);
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('headerUserName').textContent = u.name;
+        document.getElementById('headerUserImg').src = u.type === 'admin'
+          ? ROOT + 'img/default_admin.png' : ROOT + 'img/default_user.png';
+        if(sessionStorage.getItem('token')) fetch(`${API_URL}/api/auth/perfil`,{headers:{'Authorization':'Bearer '+sessionStorage.getItem('token')}}).then(r=>r.json()).then(p=>{if(p&&p.imagen_url)document.getElementById('headerUserImg').src=p.imagen_url;}).catch(()=>{});
+        document.getElementById('userDropdownName').textContent = u.name;
+        const href  = u.type === 'admin' ? ROOT + 'pages/admin/dashboard.html' : ROOT + 'pages/usuario/mis_prestamos.html';
+        const label = u.type === 'admin' ? 'Panel de administración' : 'Mis préstamos';
+        const icon  = u.type === 'admin' ? 'fa-tachometer-alt' : 'fa-box';
+        document.getElementById('userPanelLink').innerHTML =
+          '<a href="' + href + '" style="display:block;padding:9px 16px;font-size:.85em;color:#1a237e;font-weight:600;text-decoration:none">'
+          + '<i class="fas ' + icon + '" style="margin-right:8px"></i>' + label + '</a>';
+      } else {
+        loginBtn.style.display = '';
+        userMenu.style.display = 'none';
+      }
+    }
+    document.getElementById('userMenuToggle')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = 'none';
+    });
+    initSessionNav();
+  })();
+  function doLogout() {
+    if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) return;
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('appUser');
+    window.location.href = '../index.html';
+  }
+
+  (function() {
+    const ROOT = '../';
+    const API_URL_L = 'http://localhost:3000';
+
+    const loginStep = document.getElementById('step-login');
+    if (loginStep) {
+      const inputs = loginStep.querySelectorAll('input');
+      if (inputs[0] && !inputs[0].id) inputs[0].id = 'lemail';
+      if (inputs[1] && !inputs[1].id) inputs[1].id = 'lpassword';
+      
+      if (!loginStep.querySelector('#loginError')) {
+        const p = document.createElement('p');
+        p.id = 'loginError';
+        p.style.cssText = 'color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px';
+        loginStep.appendChild(p);
+      }
+    }
+
+    async function handleLogin(e) {
+      e && e.preventDefault && e.preventDefault();
+      const correo    = document.getElementById('lemail')?.value.trim();
+      const contrasena = document.getElementById('lpassword')?.value;
+      const errorEl   = document.getElementById('loginError');
+      const btn       = document.querySelector('#step-login .btn-submit');
+      if (!correo || !contrasena) {
+        if (errorEl) errorEl.textContent = 'Ingresa correo y contraseña.';
+        return;
+      }
+      if (errorEl) errorEl.textContent = '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+      try {
+        const data = await fetch(API_URL_L + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
+        }).then(r => r.json());
+        if (data.token) {
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('appUser', JSON.stringify({
+            type: data.usuario.rol,
+            name: data.usuario.nombre,
+            id:   data.usuario.id,
+          }));
+          window.location.href = data.usuario.rol === 'admin'
+            ? ROOT + 'pages/admin/dashboard.html'
+            : ROOT + 'pages/usuario/mis_prestamos.html';
+        } else {
+          if (errorEl) errorEl.textContent = data.message || 'Credenciales incorrectas.';
+        }
+      } catch(err) {
+        if (errorEl) errorEl.textContent = 'Error de conexión con el servidor.';
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Iniciar sesión'; }
+      }
+    }
+
+    document.querySelector('#step-login .btn-submit')?.addEventListener('click', handleLogin);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.getElementById('loginWrapper')?.classList.contains('active')) {
+        handleLogin();
+      }
+    });
+  })();
+  </script>
+<script src="../js/mapa-uthh.js"></script>
+</body>
+</html>

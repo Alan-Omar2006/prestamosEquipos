@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario – Panel Administrador</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div id="admin-header-placeholder"></div>
+
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html" class="active"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Inventario de Equipos</h1>
+          <p style="font-size:0.85em;color:var(--text-muted)">Gestión de equipos tecnológicos</p>
+        </div>
+        <a href="nuevo_equipo.html" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus"></i> Nuevo Equipo
+        </a>
+      </div>
+
+      <div class="filter-row">
+        <div class="search-bar" style="flex:1;max-width:320px">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInv" placeholder="Buscar equipo..." oninput="filtrarInventario()">
+        </div>
+        <select id="filtroTipo" onchange="filtrarInventario()">
+          <option value="">Todos los tipos</option>
+          <option value="ACCESORIO">Accesorio</option>
+          <option value="EQUIPO DE COMPUTO">Equipo de Cómputo</option>
+        </select>
+        <select id="filtroDisp" onchange="filtrarInventario()">
+          <option value="">Disponibilidad</option>
+          <option value="disponible">Con disponibilidad</option>
+          <option value="agotado">Sin stock</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="tablaInventario">
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>Equipo</th>
+              <th>Modelo</th>
+              <th>Marca</th>
+              <th>Stock</th>
+              <th>Disponibilidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  let _equiposCache = [];
+
+  async function cargarInventario() {
+    try {
+      const equipos = await fetch(`${API_URL}/api/inventario`, { headers: authHeaders() }).then(r => r.json());
+      _equiposCache = Array.isArray(equipos) ? equipos : [];
+      filtrarInventario();
+    } catch(e) { console.error(e); }
+  }
+
+  function filtrarInventario() {
+    const q    = (document.getElementById('searchInv').value || '').toLowerCase();
+    const tipo = (document.getElementById('filtroTipo').value || '').toUpperCase();
+    const disp = document.getElementById('filtroDisp').value;
+
+    const lista = _equiposCache.filter(e => {
+      const texto = `${e.nombre_equipo} ${e.marca||''} ${e.modelo||''} ${e.tipo||''}`.toLowerCase();
+      if (q && !texto.includes(q)) return false;
+      if (tipo && (e.tipo||'').toUpperCase() !== tipo) return false;
+      if (disp === 'disponible' && !(e.disponibilidad > 0)) return false;
+      if (disp === 'agotado'    && e.disponibilidad > 0)    return false;
+      return true;
+    });
+
+    const tbody = document.querySelector('#tablaInventario tbody');
+    tbody.innerHTML = lista.length
+      ? lista.map(e => `
+          <tr>
+            <td>${e.id_equipo}</td>
+            <td style="font-weight:600">${e.nombre_equipo}</td>
+            <td>${e.marca || '—'} / ${e.modelo || '—'}</td>
+            <td>${e.tipo || '—'}</td>
+            <td>${e.numero_inventario || '—'}</td>
+            <td>
+              <span class="status ${e.disponibilidad > 0 ? 'status-activo' : 'status-cancelado'}">
+                ${e.disponibilidad > 0 ? 'Disponible (' + e.disponibilidad + ')' : 'Sin stock'}
+              </span>
+            </td>
+            <td class="td-actions">
+              <a href="editar_equipo.html?id=${e.id_equipo}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i> Editar</a>
+              <button class="btn btn-danger btn-sm" onclick="confirmarEliminar(${e.id_equipo}, '${e.nombre_equipo.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>`)
+        .join('')
+      : '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888">No se encontraron equipos.</td></tr>';
+  }
+
+  async function confirmarEliminar(id, nombre) {
+    const conf = await Swal.fire({
+      title: '¿Eliminar equipo?',
+      text: `Se eliminará "${nombre}". Esta acción no se puede deshacer.`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res = await fetch(`${API_URL}/api/inventario/${id}`, {
+        method: 'DELETE', headers: authHeaders()
+      }).then(r => r.json());
+      showToast(res.message || res.error, res.message ? 'success' : 'error');
+      if (res.message) cargarInventario();
+    } catch(e) { showToast('Error de conexión.', 'error'); }
+  }
+
+  cargarInventario();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

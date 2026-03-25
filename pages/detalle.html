@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle del Equipo – UTHH</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/detalle.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <a href="../index.html">
+        <img src="../img/logo.png" alt="UTHH Logo" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <span class="header-title">Gestión de Préstamos de Equipos y Accesorios de Cómputo</span>
+    <nav class="navigation">
+      <button class="btn-login-popup" id="openLoginBtn">Iniciar sesión</button>
+      <div id="userMenuHeader" style="display:none;align-items:center;gap:10px;position:relative">
+        <div style="position:relative;cursor:pointer;display:flex;align-items:center" id="userMenuToggle">
+          <img id="headerUserImg" src="../img/default_user.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
+          <span id="headerUserName" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
+          <i class="fas fa-chevron-down" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
+        </div>
+        <div id="userDropdownMenu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:190px;z-index:1000;overflow:hidden">
+          <div id="userDropdownName" style="padding:12px 16px 8px;font-size:.82em;color:#888;border-bottom:1px solid #eef0f8"></div>
+          <div id="userPanelLink" style="padding:4px 0"></div>
+          <div style="padding:4px 0;border-top:1px solid #eef0f8">
+            <button onclick="doLogout()" style="width:100%;text-align:left;padding:9px 16px;background:none;border:none;cursor:pointer;font-size:.85em;color:#c62828;font-weight:600">
+              <i class="fas fa-sign-out-alt" style="margin-right:8px"></i>Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <nav class="mini-menu" id="miniMenu">
+    <div class="mini-menu-container">
+      <a href="../index.html" class="mini-menu-item"><i class="fas fa-home"></i><span>Inicio</span></a>
+      <a href="catalogo.html" class="mini-menu-item"><i class="fas fa-th"></i><span>Catálogo</span></a>
+      <a href="quienes_somos.html" class="mini-menu-item"><i class="fas fa-info-circle"></i><span>Quiénes Somos</span></a>
+      <a href="mapa.html" class="mini-menu-item"><i class="fas fa-sitemap"></i><span>Mapa de Navegación</span></a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+
+    <div class="det-breadcrumb">
+      <a href="catalogo.html" class="bc-back"><i class="fas fa-arrow-left"></i> Volver</a>
+      <span class="bc-sep"></span>
+      <a href="../index.html">Inicio</a>
+      <i class="fas fa-chevron-right bc-chevron"></i>
+      <a href="catalogo.html">Catálogo</a>
+      <i class="fas fa-chevron-right bc-chevron"></i>
+      <span id="bcNombre">Cargando…</span>
+    </div>
+
+    <div class="det-wrapper">
+
+      <aside class="det-gallery">
+        <div class="det-thumbs" id="detThumbs">
+          <div class="det-thumb active sk-thumb">
+            <div class="sk-img-sm"></div>
+          </div>
+        </div>
+        <div class="det-main-img-box">
+          <img id="detalleImg" src="../img/picture.png" alt="Equipo">
+          <button class="det-zoom-btn" onclick="abrirZoom()" title="Ver ampliado">
+            <i class="fas fa-expand-alt"></i>
+          </button>
+        </div>
+      </aside>
+
+      <section class="det-info">
+
+        <div class="det-tipo-row">
+          <span class="det-tipo-badge" id="detalleTipo"><i class="fas fa-tag"></i> EQUIPO</span>
+          <span class="det-sku" id="detSku" style="display:none">N° inv: <strong id="detSkuVal"></strong></span>
+        </div>
+
+        <h1 class="det-nombre" id="detalleNombre">Cargando…</h1>
+
+        <div class="det-disp" id="stockIndicator">
+          <i class="fas fa-check-circle" id="stockIcon"></i>
+          <span id="stockMsg">En existencia</span>
+          <span class="det-disp-count" id="stockNum"></span>
+        </div>
+
+        <hr class="det-hr">
+
+        <div class="det-specs-wrap">
+          <h3 class="det-section-title">Especificaciones</h3>
+          <table class="det-specs-table" id="specsTable">
+            <tbody>
+              <tr><td class="spec-k">Marca</td><td class="spec-v sk-line-sm"></td></tr>
+              <tr><td class="spec-k">Modelo</td><td class="spec-v sk-line-sm"></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="det-hr">
+
+        <div class="det-desc-wrap" id="descripcionBox" hidden>
+          <h3 class="det-section-title">Descripción</h3>
+          <p class="det-desc-text" id="detalleDesc"></p>
+        </div>
+
+      </section>
+
+    </div>
+
+    <div class="det-relacionados">
+      <h2 class="det-rel-title"><i class="fas fa-th-large"></i> También te puede interesar</h2>
+      <div class="det-rel-grid" id="relacionadosGrid">
+        <div class="rel-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="rel-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="rel-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="rel-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="mapa.html">Mapa de Navegación</a></li>
+          <li><a href="catalogo.html">Catálogo</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <div class="modal-zoom" id="modalZoom" onclick="cerrarZoom()">
+    <span class="modal-zoom-close">&times;</span>
+    <img id="zoomImg" src="" alt="Zoom">
+  </div>
+
+  <div id="overlay"></div>
+  <div class="modal-login-wrapper" id="loginWrapper">
+    <button class="modal-close-btn" id="closeLoginBtn"><i class="fas fa-times"></i></button>
+    <div class="login-step" id="step-login">
+      <h2>Iniciar sesión</h2>
+      <div class="input-box">
+        <input type="email" placeholder=" ">
+        <label>Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <div class="input-box">
+        <input type="password" placeholder=" ">
+        <label>Contraseña</label>
+        <span class="input-icon"><i class="fas fa-lock"></i></span>
+      </div>
+      <button class="btn-submit">Iniciar sesión</button>
+      <div class="recuperar-link">
+        <a href="#" data-step="recuperar"><i class="fas fa-key"></i> ¿Olvidaste tu contraseña?</a>
+      </div>
+    </div>
+    <div class="login-step" id="step-recuperar" hidden>
+      <h2>Recuperar Contraseña</h2>
+      <p style="font-size:.85rem;color:var(--c-muted);margin-bottom:20px;text-align:center">Ingresa tu correo para continuar</p>
+      <div class="input-box">
+        <input type="email" placeholder=" ">
+        <label>Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <button class="btn-submit">Continuar</button>
+      <div class="recuperar-link"><a href="#" data-step="login"><i class="fas fa-arrow-left"></i> Volver</a></div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const API_URL  = 'http://localhost:3000';
+    const params   = new URLSearchParams(location.search);
+    const equipoId = parseInt(params.get('id'));
+
+    async function cargarEquipo() {
+      if (!equipoId) { mostrarError('No se especificó un equipo.'); return; }
+      try {
+        const equipo = await fetch(`${API_URL}/api/inventario/${equipoId}`).then(r => r.json());
+        if (!equipo || equipo.error) { mostrarError('Equipo no encontrado.'); return; }
+        renderEquipo(equipo);
+        cargarRelacionados(equipo);
+      } catch(e) { mostrarError('Error de conexión con el servidor.'); }
+    }
+
+    function mostrarError(msg) {
+      document.getElementById('detalleNombre').textContent = msg;
+    }
+
+    function renderEquipo(e) {
+      document.title = `${e.nombre_equipo} – UTHH`;
+      document.getElementById('bcNombre').textContent = e.nombre_equipo;
+
+      const imgSrc = e.imagen_url || '../img/picture.png';
+      const mainImg = document.getElementById('detalleImg');
+      mainImg.src = imgSrc;
+      mainImg.alt = e.nombre_equipo;
+
+      document.getElementById('detThumbs').innerHTML = `
+        <div class="det-thumb active" onclick="cambiarImg('${imgSrc}', this)">
+          <img src="${imgSrc}" alt="thumb" onerror="this.src='../img/picture.png'">
+        </div>`;
+
+      document.getElementById('detalleTipo').innerHTML = `<i class="fas fa-microchip"></i> ${(e.tipo || 'Equipo de cómputo').toUpperCase()}`;
+      document.getElementById('detalleNombre').textContent = e.nombre_equipo;
+
+      if (e.numero_inventario) {
+        document.getElementById('detSkuVal').textContent = e.numero_inventario;
+        document.getElementById('detSku').style.display = '';
+      }
+
+      const d = e.disponibilidad ?? 0;
+      const si = document.getElementById('stockIndicator');
+      document.getElementById('stockNum').textContent = `· ${d} unidad${d !== 1 ? 'es' : ''}`;
+      if (d <= 0) {
+        si.className = 'det-disp agotado';
+        document.getElementById('stockIcon').className = 'fas fa-times-circle';
+        document.getElementById('stockMsg').textContent = 'Sin disponibilidad';
+      } else if (d <= 3) {
+        si.className = 'det-disp limitado';
+        document.getElementById('stockIcon').className = 'fas fa-exclamation-triangle';
+        document.getElementById('stockMsg').textContent = 'Stock limitado';
+      } else {
+        document.getElementById('stockMsg').textContent = 'En existencia';
+      }
+
+      const specs = [
+        ['Marca',        e.marca],
+        ['Modelo',       e.modelo],
+        ['Tipo',         e.tipo],
+        ['Stock total',  e.stock != null ? e.stock : null],
+        ['Disponibles',  d],
+      ].filter(([, v]) => v != null && v !== '');
+
+      document.querySelector('#specsTable tbody').innerHTML = specs.map(([k, v]) => `
+        <tr>
+          <td class="spec-k">${k}</td>
+          <td class="spec-v">${v}</td>
+        </tr>`).join('');
+
+      if (e.descripcion) {
+        document.getElementById('detalleDesc').textContent = e.descripcion;
+        document.getElementById('descripcionBox').hidden = false;
+      }
+    }
+
+    function cambiarImg(src, thumb) {
+      document.getElementById('detalleImg').src = src;
+      document.querySelectorAll('.det-thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    }
+
+    async function cargarRelacionados(equipo) {
+      try {
+        const todos = await fetch(`${API_URL}/api/inventario/disponibles`).then(r => r.json());
+        const rel = Array.isArray(todos)
+          ? todos.filter(e => e.id_equipo !== equipo.id_equipo && e.tipo === equipo.tipo).slice(0, 4)
+          : [];
+        const grid = document.getElementById('relacionadosGrid');
+        if (!rel.length) { grid.innerHTML = '<p style="color:#888;font-size:.88rem">No hay sugerencias disponibles.</p>'; return; }
+        grid.innerHTML = rel.map(r => `
+          <a href="detalle.html?id=${r.id_equipo}" class="rel-card-link">
+            <div class="rel-card">
+              <div class="rel-img-box">
+                <img src="${r.imagen_url || '../img/picture.png'}"
+                     alt="${r.nombre_equipo}" loading="lazy"
+                     onerror="this.src='../img/picture.png'">
+              </div>
+              <div class="rel-body">
+                <p class="rel-name">${r.nombre_equipo}</p>
+                <p class="rel-meta">${[r.marca, r.modelo].filter(Boolean).join(' · ')}</p>
+                <span class="rel-badge ${r.disponibilidad > 3 ? 'disp' : r.disponibilidad > 0 ? 'lim' : 'ago'}">
+                  ${r.disponibilidad > 0 ? r.disponibilidad + ' disponibles' : 'Sin existencias'}
+                </span>
+              </div>
+            </div>
+          </a>`).join('');
+      } catch(e) { console.error(e); }
+    }
+
+    function abrirZoom() {
+      document.getElementById('zoomImg').src = document.getElementById('detalleImg').src;
+      document.getElementById('modalZoom').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function cerrarZoom() {
+      document.getElementById('modalZoom').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    cargarEquipo();
+  </script>
+
+  <script>
+  (function() {
+    const ROOT = '../';
+    function initSessionNav() {
+      const userData = sessionStorage.getItem('appUser');
+      const loginBtn = document.getElementById('openLoginBtn');
+      const userMenu = document.getElementById('userMenuHeader');
+      if (!loginBtn || !userMenu) return;
+      if (userData) {
+        const u = JSON.parse(userData);
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('headerUserName').textContent = u.name;
+        document.getElementById('headerUserImg').src = u.type === 'admin' ? ROOT+'img/default_admin.png' : ROOT+'img/default_user.png';
+        const _tok=sessionStorage.getItem('token');
+        if(_tok) fetch(`${ROOT||'../'}../`===`../../` ? `${API_URL}/api/auth/perfil` : `${API_URL}/api/auth/perfil`,{headers:{'Authorization':`Bearer ${_tok}`}}).then(r=>r.json()).then(p=>{if(p&&p.imagen_url)document.getElementById('headerUserImg').src=p.imagen_url;}).catch(()=>{});
+        document.getElementById('userDropdownName').textContent = u.name;
+        const href  = u.type === 'admin' ? ROOT+'pages/admin/dashboard.html' : ROOT+'pages/usuario/mis_prestamos.html';
+        const label = u.type === 'admin' ? 'Panel de administración' : 'Mis préstamos';
+        const icon  = u.type === 'admin' ? 'fa-tachometer-alt' : 'fa-box';
+        document.getElementById('userPanelLink').innerHTML =
+          '<a href="'+href+'" style="display:block;padding:9px 16px;font-size:.85em;color:#1a237e;font-weight:600;text-decoration:none"><i class="fas '+icon+'" style="margin-right:8px"></i>'+label+'</a>';
+      } else {
+        loginBtn.style.display = '';
+        userMenu.style.display = 'none';
+      }
+    }
+    document.getElementById('userMenuToggle')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = 'none';
+    });
+    initSessionNav();
+  })();
+  function doLogout() {
+    if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) return;
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('appUser');
+    window.location.href = '../index.html';
+  }
+  (function() {
+    const ROOT = '../';
+    const API_URL_L = 'http://localhost:3000';
+    const loginStep = document.getElementById('step-login');
+    if (loginStep) {
+      const inputs = loginStep.querySelectorAll('input');
+      if (inputs[0] && !inputs[0].id) inputs[0].id = 'lemail';
+      if (inputs[1] && !inputs[1].id) inputs[1].id = 'lpassword';
+      if (!loginStep.querySelector('#loginError')) {
+        const p = document.createElement('p');
+        p.id = 'loginError';
+        p.style.cssText = 'color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px';
+        loginStep.appendChild(p);
+      }
+    }
+    async function handleLogin() {
+      const correo     = document.getElementById('lemail')?.value.trim();
+      const contrasena = document.getElementById('lpassword')?.value;
+      const errorEl    = document.getElementById('loginError');
+      const btn        = document.querySelector('#step-login .btn-submit');
+      if (!correo || !contrasena) { if (errorEl) errorEl.textContent = 'Ingresa correo y contraseña.'; return; }
+      if (errorEl) errorEl.textContent = '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+      try {
+        const data = await fetch(API_URL_L + '/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
+        }).then(r => r.json());
+        if (data.token) {
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('appUser', JSON.stringify({ type: data.usuario.rol, name: data.usuario.nombre, id: data.usuario.id }));
+          window.location.href = data.usuario.rol === 'admin' ? ROOT+'pages/admin/dashboard.html' : ROOT+'pages/usuario/mis_prestamos.html';
+        } else { if (errorEl) errorEl.textContent = data.message || 'Credenciales incorrectas.'; }
+      } catch(err) { if (errorEl) errorEl.textContent = 'Error de conexión con el servidor.'; }
+      finally { if (btn) { btn.disabled = false; btn.textContent = 'Iniciar sesión'; } }
+    }
+    document.querySelector('#step-login .btn-submit')?.addEventListener('click', handleLogin);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.getElementById('loginWrapper')?.classList.contains('active')) handleLogin();
+    });
+  })();
+  </script>
+<script src="../js/mapa-uthh.js"></script>
+</body>
+</html>

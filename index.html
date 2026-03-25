@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio – Gestión de Préstamos UTHH</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <a href="index.html">
+        <img src="img/logo.png" alt="UTHH Logo" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <span class="header-title">Gestión de Préstamos de Equipos y Accesorios de Cómputo</span>
+    <nav class="navigation">
+      <button class="btn-login-popup" id="openLoginBtn">Iniciar sesión</button>
+      <div id="userMenuHeader" style="display:none;align-items:center;gap:10px;position:relative">
+        <div style="position:relative;cursor:pointer;display:flex;align-items:center" id="userMenuToggle">
+          <img id="headerUserImg" src="img/default_user.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
+          <span id="headerUserName" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
+          <i class="fas fa-chevron-down" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
+        </div>
+        <div id="userDropdownMenu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:200px;z-index:1000;overflow:hidden">
+          <div id="userDropdownName" style="padding:14px 16px 10px;font-size:.85em;color:#888;border-bottom:1px solid #eef0f8"></div>
+          <div id="userPanelLink" style="padding:4px 0"></div>
+          <div style="padding:4px 0;border-top:1px solid #eef0f8">
+            <button id="headerLogoutBtn" style="width:100%;text-align:left;padding:10px 16px;background:none;border:none;cursor:pointer;font-size:.88em;color:#c62828;font-weight:600">
+              <i class="fas fa-sign-out-alt" style="margin-right:8px"></i>Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <nav class="mini-menu" id="miniMenu">
+    <div class="mini-menu-container">
+      <a href="index.html" class="mini-menu-item active">
+        <i class="fas fa-home"></i><span>Inicio</span>
+      </a>
+      <a href="pages/catalogo.html" class="mini-menu-item">
+        <i class="fas fa-th"></i><span>Catálogo</span>
+      </a>
+      <a href="pages/quienes_somos.html" class="mini-menu-item">
+        <i class="fas fa-info-circle"></i><span>Quiénes Somos</span>
+      </a>
+      <a href="pages/mapa.html" class="mini-menu-item">
+        <i class="fas fa-sitemap"></i><span>Mapa de Navegación</span>
+      </a>
+    </div>
+  </nav>
+
+  <img src="img/accesibilidad1.png" class="accesibilidad-btn" alt="Accesibilidad" title="Accesibilidad"
+       onerror="this.style.display='none'">
+
+  <main class="page-content">
+
+    <section class="noticias-section">
+      <div class="section-heading">
+        <h2><i class="fas fa-newspaper"></i> Últimas Noticias</h2>
+      </div>
+
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow" id="prevNot" aria-label="Anterior">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="carousel-track" id="carouselTrack">
+        </div>
+
+        <button class="carousel-arrow" id="nextNot" aria-label="Siguiente">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="carousel-dots" id="carouselDots"></div>
+    </section>
+
+    <section class="mas-prestados-section">
+      <div class="mas-prestados-inner">
+        <div class="section-heading">
+          <h2><i class="fas fa-fire"></i> Equipos Más Solicitados</h2>
+        </div>
+
+        <div id="prestadosList" class="prestados-list"></div>
+        <div id="prestadosPag" class="pagination-wrap"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <div id="overlay"></div>
+
+  <div class="modal-login-wrapper" id="loginWrapper">
+    <button class="modal-close-btn" id="closeLoginBtn" aria-label="Cerrar">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="login-step" id="step-login">
+      <h2>Iniciar sesión</h2>
+      <div class="input-box">
+        <input type="email" id="lemail" placeholder=" ">
+        <label for="lemail">Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <div class="input-box">
+        <input type="password" id="lpassword" placeholder=" ">
+        <label for="lpassword">Contraseña</label>
+        <span class="input-icon"><i class="fas fa-lock"></i></span>
+      </div>
+      <button class="btn-submit" id="btnLoginSubmit">Iniciar sesión</button>
+      <p id="loginError" style="color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px"></p>
+      <div class="recuperar-link">
+        <a href="#" data-step="recuperar">
+          <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+    </div>
+
+    <div class="login-step" id="step-recuperar" hidden>
+      <h2>Recuperar Contraseña</h2>
+      <p style="font-size:.85rem;color:var(--c-muted);margin-bottom:20px;text-align:center">
+        Ingresa tu correo para continuar
+      </p>
+      <div class="input-box">
+        <input type="email" placeholder=" ">
+        <label>Correo electrónico</label>
+        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+      </div>
+      <button class="btn-submit">Continuar</button>
+      <div class="recuperar-link">
+        <a href="#" data-step="login"><i class="fas fa-arrow-left"></i> Volver al login</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-noticia-bg" id="modalNoticia">
+    <div class="modal-noticia-box">
+      <div class="modal-noticia-img">
+        <img id="modalNoticiaImg" src="" alt="">
+        <button class="modal-noticia-close" onclick="cerrarNoticia()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-noticia-body">
+        <h2 id="modalNoticiaTitulo"></h2>
+        <div class="modal-noticia-fecha">
+          <i class="far fa-calendar-alt"></i>
+          <span id="modalNoticiaFecha"></span>
+        </div>
+        <div class="modal-noticia-contenido" id="modalNoticiaContenido"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    function actualizarHeaderSesion() {
+      const userData = sessionStorage.getItem('appUser');
+      const loginBtn = document.getElementById('openLoginBtn');
+      const userMenu = document.getElementById('userMenuHeader');
+      if (userData) {
+        const user = JSON.parse(userData);
+        loginBtn.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('headerUserName').textContent = user.name;
+        document.getElementById('headerUserImg').src =
+          user.type === 'admin' ? 'img/default_admin.png' : 'img/default_user.png';
+        // Load real profile picture from API
+        const _tok = sessionStorage.getItem('token');
+        if (_tok) fetch(`${API_URL}/api/auth/perfil`, { headers: { 'Authorization': `Bearer ${_tok}` } })
+          .then(r => r.json()).then(p => { if (p && p.imagen_url) document.getElementById('headerUserImg').src = p.imagen_url; }).catch(()=>{});
+        document.getElementById('userDropdownName').textContent = user.name;
+        
+        const panelHref = user.type === 'admin'
+          ? 'pages/admin/dashboard.html'
+          : 'pages/usuario/mis_prestamos.html';
+        const panelLabel = user.type === 'admin' ? 'Panel de Administración' : 'Mis Préstamos';
+        const panelIcon  = user.type === 'admin' ? 'fa-tachometer-alt' : 'fa-box';
+        document.getElementById('userPanelLink').innerHTML =
+          `<a href="${panelHref}" style="display:block;padding:10px 16px;font-size:.88em;color:#1a237e;font-weight:600;text-decoration:none">
+             <i class="fas ${panelIcon}" style="margin-right:8px"></i>${panelLabel}
+           </a>`;
+      } else {
+        loginBtn.style.display = '';
+        userMenu.style.display = 'none';
+      }
+    }
+
+    document.getElementById('userMenuToggle')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dd = document.getElementById('userDropdownMenu');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('userDropdownMenu');
+      if (dd) dd.style.display = 'none';
+    });
+
+    document.getElementById('headerLogoutBtn')?.addEventListener('click', () => {
+      if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) return;
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('appUser');
+      actualizarHeaderSesion();
+    });
+
+    async function handleLogin() {
+      const correo    = document.getElementById('lemail').value.trim();
+      const contrasena = document.getElementById('lpassword').value;
+      const errorEl   = document.getElementById('loginError');
+      const btn       = document.getElementById('btnLoginSubmit');
+
+      if (!correo || !contrasena) {
+        errorEl.textContent = 'Ingresa correo y contraseña.';
+        return;
+      }
+      errorEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+
+      try {
+        const data = await fetch(`${API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
+        }).then(r => r.json());
+
+        if (data.token) {
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('appUser', JSON.stringify({
+            type: data.usuario.rol,
+            name: data.usuario.nombre,
+            id:   data.usuario.id,
+            img:  data.usuario.rol === 'admin' ? 'img/default_admin.png' : 'img/default_user.png'
+          }));
+          document.getElementById('overlay').classList.remove('active');
+          document.getElementById('loginWrapper').classList.remove('active');
+          if (data.usuario.rol === 'admin') {
+            window.location.href = 'pages/admin/dashboard.html';
+          } else {
+            window.location.href = 'pages/usuario/mis_prestamos.html';
+          }
+        } else {
+          errorEl.textContent = data.message || 'Credenciales incorrectas.';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Error de conexión con el servidor.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar sesión';
+      }
+    }
+
+    document.getElementById('btnLoginSubmit').addEventListener('click', handleLogin);
+    document.getElementById('lpassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    let _noticias = [];
+    let slideIdx  = 0;
+
+    async function cargarNoticias() {
+      try {
+        const data = await fetch(`${API_URL}/api/noticias`).then(r => r.json());
+        _noticias = Array.isArray(data) ? data : [];
+      } catch(e) { _noticias = []; }
+
+      const track  = document.getElementById('carouselTrack');
+      const dotsEl = document.getElementById('carouselDots');
+      if (!track) return;
+
+      if (_noticias.length === 0) {
+        track.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No hay noticias disponibles.</p>';
+        return;
+      }
+
+      track.innerHTML = _noticias.map((n, i) => `
+        <div class="carousel-slide ${i === 0 ? 'active' : ''}">
+          <div class="noticia-card">
+            <div class="noticia-img-wrap">
+              <img src="${n.imagen_url || 'img/picture.png'}"
+                  alt="${n.titulo}" loading="lazy"
+                  onerror="this.src='img/picture.png'">
+              <span class="noticia-fecha-badge">
+                <i class="far fa-calendar-alt"></i>
+                ${new Date(n.fecha_publicacion).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}
+              </span>
+            </div>
+            <div class="noticia-body">
+              <div>
+                <h3>${n.titulo}</h3>
+                <p>${n.descripcion}</p>
+              </div>
+              <button class="btn-leer-mas" onclick="verNoticia(${i})">
+                Leer más <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      dotsEl.innerHTML = _noticias.map((_, i) =>
+        `<span class="dot ${i === 0 ? 'active' : ''}" onclick="irSlide(${i})"></span>`
+      ).join('');
+
+      setInterval(() => irSlide((slideIdx + 1) % _noticias.length), 6000);
+    }
+
+    function irSlide(idx) {
+      const slides = document.querySelectorAll('.carousel-slide');
+      const dots   = document.querySelectorAll('.dot');
+      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+      dots.forEach((d, i)   => d.classList.toggle('active', i === idx));
+      slideIdx = idx;
+    }
+
+    document.getElementById('prevNot').addEventListener('click', () =>
+      irSlide((slideIdx - 1 + Math.max(_noticias.length, 1)) % Math.max(_noticias.length, 1)));
+    document.getElementById('nextNot').addEventListener('click', () =>
+      irSlide((slideIdx + 1) % Math.max(_noticias.length, 1)));
+
+    function verNoticia(idx) {
+      const n = _noticias[idx];
+      if (!n) return;
+      document.getElementById('modalNoticiaImg').src = n.imagen_url || '';
+      document.getElementById('modalNoticiaTitulo').textContent = n.titulo;
+      document.getElementById('modalNoticiaFecha').textContent =
+        new Date(n.fecha_publicacion).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+      document.getElementById('modalNoticiaContenido').textContent = n.contenido || n.descripcion;
+      document.getElementById('modalNoticia').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function cerrarNoticia() {
+      document.getElementById('modalNoticia').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('modalNoticia').addEventListener('click', e => {
+      if (e.target === document.getElementById('modalNoticia')) cerrarNoticia();
+    });
+
+    function badgeClass(d) {
+      if (!d && d !== 0) return 'limited';
+      if (d > 3) return 'available';
+      if (d > 0) return 'limited';
+      return 'none';
+    }
+    function badgeText(d) {
+      if (!d && d !== 0) return 'N/D';
+      if (d > 0) return `${d} disp.`;
+      return 'Agotado';
+    }
+
+    async function cargarEquipos() {
+      const listEl = document.getElementById('prestadosList');
+      const pagEl  = document.getElementById('prestadosPag');
+      if (pagEl) pagEl.innerHTML = '';
+      try {
+        const data = await fetch(`${API_URL}/api/prestamos`).then(r => r.json());
+        let top5 = [];
+        if (Array.isArray(data) && data.length) {
+          const conteo = {};
+          data.forEach(p => {
+            if (!p.id_equipo) return;
+            conteo[p.id_equipo] = (conteo[p.id_equipo] || { count: 0, equipo: p });
+            conteo[p.id_equipo].count++;
+          });
+          top5 = Object.values(conteo)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+        }
+        if (!top5.length) {
+          const fallback = await fetch(`${API_URL}/api/inventario/disponibles`).then(r => r.json());
+          top5 = Array.isArray(fallback)
+            ? fallback.slice(0, 5).map(e => ({ count: null, equipo: e }))
+            : [];
+        }
+        if (!listEl) return;
+        listEl.innerHTML = top5.length ? top5.map(item => {
+          const e = item.equipo;
+          return `
+          <a href="pages/detalle.html?id=${e.id_equipo}" class="prestado-card-link" style="text-decoration:none;color:inherit">
+            <div class="prestado-card">
+              <div class="prestado-thumb">
+                <img src="${e.imagen_url || 'img/picture.png'}"
+                    alt="${e.nombre_equipo}"
+                    onerror="this.src='img/picture.png'">
+              </div>
+              <div class="prestado-body">
+                <div class="prestado-name">${e.nombre_equipo}</div>
+                <div class="prestado-meta">
+                  Marca: <b>${e.marca || '—'}</b> &nbsp;•&nbsp; Modelo: <b>${e.modelo || '—'}</b>
+                </div>
+                <div class="prestado-desc">${e.descripcion || ''}</div>
+              </div>
+              <div class="prestado-right">
+                <span class="badge ${badgeClass(e.disponibilidad)}">${badgeText(e.disponibilidad)}</span>
+              </div>
+            </div>
+          </a>`;
+        }).join('') : '<p style="padding:20px;color:#888;text-align:center">No hay equipos disponibles.</p>';
+      } catch(e) {
+        if (listEl) listEl.innerHTML = '<p style="padding:20px;color:#888;text-align:center">No se pudo cargar.</p>';
+      }
+    }
+
+    document.getElementById('openLoginBtn')?.addEventListener('click', () => {
+      document.getElementById('overlay').classList.add('active');
+      document.getElementById('loginWrapper').classList.add('active');
+    });
+    document.getElementById('closeLoginBtn')?.addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('active');
+      document.getElementById('loginWrapper').classList.remove('active');
+    });
+    document.getElementById('overlay')?.addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('active');
+      document.getElementById('loginWrapper').classList.remove('active');
+    });
+    document.querySelectorAll('[data-step]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.login-step').forEach(el => el.hidden = true);
+        document.getElementById('step-' + btn.dataset.step).hidden = false;
+      });
+    });
+
+    actualizarHeaderSesion();
+    cargarNoticias();
+    cargarEquipos();
+  </script>
+
+<script src="js/mapa-uthh.js"></script>
+</body>
+</html>

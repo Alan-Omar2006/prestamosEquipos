@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Préstamo – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .field-error{color:#c62828;font-size:.82em;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .form-control.error{border-color:#c62828;border-width:2px}
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html" class="active"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Editar Préstamo</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Modifica los datos del préstamo</p>
+        </div>
+        <a href="prestamos.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+      <div style="max-width:560px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
+
+        <div class="form-group">
+          <label class="form-label">Usuario <span style="color:#aaa;font-weight:400">(solo lectura)</span></label>
+          <input type="text" class="form-control" id="eUsuario" readonly style="background:#f5f5f5;cursor:not-allowed">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Equipo <span style="color:#aaa;font-weight:400">(solo lectura)</span></label>
+          <input type="text" class="form-control" id="eEquipo" readonly style="background:#f5f5f5;cursor:not-allowed">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Fecha de Préstamo <span style="color:#c62828">*</span></label>
+            <input type="date" class="form-control" id="eFechaInicio" readonly style="background:#f5f5f5;cursor:not-allowed">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Devolución</label>
+            <input type="date" class="form-control" id="eFechaFin">
+            <p class="field-error" id="error-devolucion">La fecha de devolución debe ser posterior a la de préstamo</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estado <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="eEstado">
+            <option value="ACTIVO">ACTIVO</option>
+            <option value="EN PROCESO">EN PROCESO</option>
+            <option value="DEVUELTO">DEVUELTO</option>
+            <option value="CANCELADO">CANCELADO</option>
+          </select>
+          <p class="field-error" id="error-estado">Debe seleccionar un estado</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-control" id="eObs" rows="3" placeholder="Observaciones adicionales sobre el préstamo (opcional)..."></textarea>
+        </div>
+
+        <p id="errorEdit" style="color:#c62828;font-size:.85em;min-height:18px"></p>
+        <div style="display:flex;gap:12px;margin-top:4px">
+          <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardarCambios()"><i class="fas fa-save"></i> Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  document.getElementById('eFechaFin').addEventListener('change', () => {
+    document.getElementById('eFechaFin').classList.remove('error');
+    document.getElementById('error-devolucion').classList.remove('show');
+  });
+  document.getElementById('eEstado').addEventListener('change', () => {
+    document.getElementById('eEstado').classList.remove('error');
+    document.getElementById('error-estado').classList.remove('show');
+  });
+
+  async function cargarPrestamo() {
+    if (!id) { document.getElementById('errorEdit').textContent = 'ID de préstamo no válido.'; return; }
+    try {
+      const p = await fetch(`${API_URL}/api/prestamos/${id}`, { headers: authHeaders() }).then(r => r.json());
+      if (!p || p.message) { document.getElementById('errorEdit').textContent = 'Préstamo no encontrado.'; return; }
+
+      document.getElementById('eUsuario').value   = p.usuario || '—';
+      document.getElementById('eEquipo').value    = p.nombre_equipo || '—';
+      document.getElementById('eFechaInicio').value = p.fecha_prestamo ? p.fecha_prestamo.split('T')[0] : '';
+      document.getElementById('eFechaFin').value  = p.fecha_devolucion ? p.fecha_devolucion.split('T')[0] : '';
+      document.getElementById('eObs').value       = p.observaciones || '';
+
+      const selEstado = document.getElementById('eEstado');
+      [...selEstado.options].forEach(o => { o.selected = o.value === p.estado_prestamo; });
+    } catch(e) {
+      console.error(e);
+      document.getElementById('errorEdit').textContent = 'Error de conexión.';
+    }
+  }
+
+  async function guardarCambios() {
+    const estado_prestamo  = document.getElementById('eEstado').value;
+    const fecha_devolucion = document.getElementById('eFechaFin').value;
+    const fecha_inicio     = document.getElementById('eFechaInicio').value;
+    const observaciones    = document.getElementById('eObs').value.trim();
+    const errorEl          = document.getElementById('errorEdit');
+
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
+    errorEl.textContent = '';
+
+    let valid = true;
+
+    if (!estado_prestamo) {
+      document.getElementById('eEstado').classList.add('error');
+      document.getElementById('error-estado').classList.add('show');
+      valid = false;
+    }
+    if (fecha_devolucion && fecha_inicio) {
+      if (new Date(fecha_devolucion) <= new Date(fecha_inicio)) {
+        document.getElementById('eFechaFin').classList.add('error');
+        document.getElementById('error-devolucion').classList.add('show');
+        valid = false;
+      }
+    }
+
+    if (!valid) {
+      document.querySelector('.error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const conf = await Swal.fire({
+      title: '¿Guardar cambios?',
+      text: `Se actualizará el préstamo #${id}.`,
+      icon: 'question', showCancelButton: true,
+      confirmButtonColor: '#1a237e', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, guardar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/prestamos/${id}`, {
+        method: 'PUT', headers: authHeaders(true),
+        body: JSON.stringify({ estado_prestamo, fecha_devolucion, observaciones })
+      }).then(r => r.json());
+
+      if (res.message) {
+        await Swal.fire({ icon: 'success', title: '¡Listo!', text: 'Préstamo actualizado correctamente.', confirmButtonColor: '#1a237e' });
+        window.location.href = 'prestamos.html';
+      } else {
+        errorEl.textContent = res.error || 'Error al guardar.';
+      }
+    } catch(e) {
+      errorEl.textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+    }
+  }
+
+  async function confirmarCancelar() {
+    const conf = await Swal.fire({
+      title: '¿Cancelar?', text: 'Los cambios no se guardarán.',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, salir', cancelButtonText: 'Seguir editando'
+    });
+    if (conf.isConfirmed) window.location.href = 'prestamos.html';
+  }
+
+  cargarPrestamo();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo Préstamo – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .field-error{color:#c62828;font-size:.82em;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .form-control.error{border-color:#c62828}
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html" class="active"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion();return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Nuevo Préstamo</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Registrar préstamo manualmente</p>
+        </div>
+        <a href="prestamos.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+      <div style="max-width:640px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
+
+        <div class="form-group">
+          <label class="form-label">Usuario <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="selUsuario"><option value="">Seleccionar usuario...</option></select>
+          <p class="field-error" id="error-usuario">Debe seleccionar un usuario</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Equipo / Accesorio <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="selEquipo"><option value="">Seleccionar equipo...</option></select>
+          <p class="field-error" id="error-equipo">Debe seleccionar un equipo</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Fecha de préstamo <span style="color:#c62828">*</span></label>
+            <input type="date" class="form-control" id="fInicio" readonly style="background:#f5f5f5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de devolución <span style="color:#c62828">*</span></label>
+            <input type="date" class="form-control" id="fFin">
+            <p class="field-error" id="error-devolucion">La fecha de devolución debe ser posterior a la fecha de préstamo</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-control" id="obs" rows="3" placeholder="Observaciones adicionales sobre el préstamo (opcional)..."></textarea>
+        </div>
+
+        <p id="errorPrestamo" style="color:#c62828;font-size:.85em;min-height:18px"></p>
+        <div style="display:flex;gap:12px;margin-top:4px">
+          <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardarPrestamo()"><i class="fas fa-save"></i> Registrar préstamo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  const hoyStr = hoy.toISOString().split('T')[0];
+  document.getElementById('fInicio').value = hoyStr;
+
+  const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
+  document.getElementById('fFin').min = manana.toISOString().split('T')[0];
+
+  document.querySelectorAll('select,input,textarea').forEach(el=>{
+    el.addEventListener('change',()=>el.classList.remove('error'));
+    el.addEventListener('input',()=>el.classList.remove('error'));
+  });
+
+  async function cargarSelectores() {
+    try {
+      const [usuarios, equipos] = await Promise.all([
+        fetch(`${API_URL}/api/usuarios`,{headers:authHeaders()}).then(r=>r.json()),
+        fetch(`${API_URL}/api/inventario/disponibles`).then(r=>r.json()),
+      ]);
+      const selU = document.getElementById('selUsuario');
+      const selE = document.getElementById('selEquipo');
+      if(Array.isArray(usuarios))
+        usuarios.forEach(u=>selU.innerHTML+=`<option value="${u.id_usuario}">${u.nombre} ${u.apellido_p} (${u.Matricula||'—'})</option>`);
+      if(Array.isArray(equipos))
+        equipos.filter(e=>e.disponibilidad>0).forEach(e=>selE.innerHTML+=`<option value="${e.id_equipo}" data-disp="${e.disponibilidad}">${e.nombre_equipo} — ${e.disponibilidad} disp.</option>`);
+    } catch(e) { console.error(e); }
+  }
+
+  async function guardarPrestamo() {
+    const id_usuario      = document.getElementById('selUsuario').value;
+    const id_equipo       = document.getElementById('selEquipo').value;
+    const fecha_prestamo  = document.getElementById('fInicio').value;
+    const fecha_devolucion= document.getElementById('fFin').value;
+    const observaciones   = document.getElementById('obs').value.trim();
+
+    document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('show'));
+    document.querySelectorAll('.form-control').forEach(e=>e.classList.remove('error'));
+    document.getElementById('errorPrestamo').textContent='';
+
+    let valid=true;
+    if(!id_usuario){document.getElementById('selUsuario').classList.add('error');document.getElementById('error-usuario').classList.add('show');valid=false;}
+    if(!id_equipo) {document.getElementById('selEquipo').classList.add('error'); document.getElementById('error-equipo').classList.add('show'); valid=false;}
+    if(!fecha_devolucion||new Date(fecha_devolucion)<=new Date(fecha_prestamo)){
+      document.getElementById('fFin').classList.add('error');
+      document.getElementById('error-devolucion').classList.add('show');valid=false;
+    }
+
+    if(!valid){document.querySelector('.error')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+
+    const conf=await Swal.fire({
+      title:'¿Registrar préstamo?',
+      text:`Se registrará el préstamo. Fecha de devolución: ${fecha_devolucion}.`,
+      icon:'question',showCancelButton:true,
+      confirmButtonColor:'#1a237e',cancelButtonColor:'#757575',
+      confirmButtonText:'Sí, registrar',cancelButtonText:'Cancelar'
+    });
+    if(!conf.isConfirmed)return;
+
+    const btn=document.getElementById('btnGuardar');
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+    try{
+      const res=await fetch(`${API_URL}/api/prestamos`,{method:'POST',headers:authHeaders(true),
+        body:JSON.stringify({id_usuario: parseInt(id_usuario), id_equipo: parseInt(id_equipo), fecha_prestamo, fecha_devolucion, observaciones})
+      }).then(r=>r.json());
+      if(res.message&&!res.error){
+        await Swal.fire({icon:'success',title:'¡Registrado!',text:'Préstamo registrado correctamente.',confirmButtonColor:'#1a237e'});
+        window.location.href='prestamos.html';
+      }else{document.getElementById('errorPrestamo').textContent=res.error||res.message||'Error al registrar.';}
+    }catch(e){document.getElementById('errorPrestamo').textContent='Error de conexión.';}
+    finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Registrar préstamo';}
+  }
+
+  async function confirmarCancelar(){
+    const conf=await Swal.fire({title:'¿Cancelar?',text:'No se registrará el préstamo.',icon:'warning',showCancelButton:true,confirmButtonColor:'#c62828',cancelButtonColor:'#757575',confirmButtonText:'Sí, salir',cancelButtonText:'Seguir editando'});
+    if(conf.isConfirmed)window.location.href='prestamos.html';
+  }
+
+  cargarSelectores();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

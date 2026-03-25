@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Equipo – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .field-error{color:#c62828;font-size:.82em;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .form-control.error{border-color:#c62828}
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html" class="active"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion();return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Editar Equipo</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Actualiza los datos del equipo</p>
+        </div>
+        <a href="inventario.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+      <div style="max-width:680px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px" id="formWrap">
+        <p style="text-align:center;color:#888"><i class="fas fa-spinner fa-spin"></i> Cargando...</p>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="../../js/admin-helper.js"></script>
+<script src="../../js/cloudinary-upload.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  async function cargarEquipo() {
+    if (!id) { document.getElementById('formWrap').innerHTML='<p style="color:#c62828">ID no válido.</p>'; return; }
+    try {
+      const [equipo, modelos, tipos] = await Promise.all([
+        fetch(`${API_URL}/api/inventario/${id}`,{headers:authHeaders()}).then(r=>r.json()),
+        fetch(`${API_URL}/api/inventario/modelos`).then(r=>r.json()),
+        fetch(`${API_URL}/api/inventario/tipos`).then(r=>r.json()),
+      ]);
+      if (!equipo || equipo.error) { document.getElementById('formWrap').innerHTML='<p style="color:#c62828">Equipo no encontrado.</p>'; return; }
+      renderForm(equipo, Array.isArray(modelos)?modelos:[], Array.isArray(tipos)?tipos:[]);
+    } catch(e) { document.getElementById('formWrap').innerHTML='<p style="color:#c62828">Error de conexión.</p>'; }
+  }
+
+  function renderForm(e, modelos, tipos) {
+    const imgActual = e.imagen_url || '../../img/picture.png';
+    const optsM = modelos.map(m=>`<option value="${m.id_modelo}" ${e.id_modelo==m.id_modelo?'selected':''}>${m.nombre_modelo} (${m.nombre_marca||'—'})</option>`).join('');
+    const optsT = tipos.map(t=>`<option value="${t.id_tipo}" ${e.id_tipo==t.id_tipo?'selected':''}>${t.nombre_Tipo}</option>`).join('');
+
+    document.getElementById('formWrap').innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Imagen del equipo</label>
+        <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex-shrink:0">
+            <img id="imgPreview" src="${imgActual}" data-default="../../img/picture.png"
+              onerror="this.src='../../img/picture.png'"
+              style="width:100px;height:100px;object-fit:cover;border-radius:12px;border:2px solid #e0e0e0">
+            <p id="imgEstado" style="font-size:.78em;text-align:center;margin-top:4px;color:${e.imagen_url?'#2e7d32':'#aaa'}">
+              ${e.imagen_url?'✓ Imagen actual':'Sin imagen'}
+            </p>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <p style="font-size:.85em;color:#666;margin-bottom:8px">Selecciona una imagen nueva para reemplazar la actual.<br>JPG, PNG o WEBP · máx. 5 MB</p>
+            <input type="file" id="inputImagen" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:block;width:100%">
+            <p id="errorImg" style="color:#c62828;font-size:.82em;min-height:14px;margin-top:4px"></p>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="imagenUrl" value="${e.imagen_url||''}">
+
+      <div class="form-group">
+        <label class="form-label">Nombre del equipo <span style="color:#c62828">*</span></label>
+        <input type="text" class="form-control" id="eNombre" value="${e.nombre_equipo||''}" maxlength="100">
+        <p class="field-error" id="error-nombre">El nombre del equipo es obligatorio</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Tipo <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="eTipo"><option value="">Seleccionar...</option>${optsT}</select>
+          <p class="field-error" id="error-tipo">Debe seleccionar un tipo de equipo</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="eModelo"><option value="">Seleccionar...</option>${optsM}</select>
+          <p class="field-error" id="error-modelo">Debe seleccionar un modelo</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Stock <span style="color:#c62828">*</span></label>
+          <input type="number" class="form-control" id="eStock" value="${e.stock??0}" min="0">
+          <p class="field-error" id="error-stock">El stock debe ser mayor o igual a 0</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Disponibilidad <span style="color:#c62828">*</span></label>
+          <input type="number" class="form-control" id="eDisp" value="${e.disponibilidad??0}" min="0">
+          <p class="field-error" id="error-disponibilidad">La disponibilidad no puede ser mayor que el stock</p>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número de inventario</label>
+        <input type="text" class="form-control" id="eNumInv" value="${e.numero_inventario||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción <span style="color:#c62828">*</span></label>
+        <textarea class="form-control" id="eDesc" rows="3">${e.descripcion||''}</textarea>
+        <p class="field-error" id="error-descripcion">La descripción es obligatoria</p>
+      </div>
+      <p id="errorE" style="color:#c62828;font-size:.85em;min-height:18px;margin-top:8px"></p>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarE" onclick="guardarEquipo()"><i class="fas fa-save"></i> Guardar cambios</button>
+      </div>`;
+
+    document.querySelectorAll('#formWrap input,#formWrap select,#formWrap textarea').forEach(el=>{
+      el.addEventListener('input',()=>el.classList.remove('error'));
+      el.addEventListener('change',()=>el.classList.remove('error'));
+    });
+
+    configurarInputImagen(document.getElementById('inputImagen'),document.getElementById('imgPreview'),'equipos',
+      function(url,error,cargando){
+        const est=document.getElementById('imgEstado'),err=document.getElementById('errorImg');
+        if(cargando){est.innerHTML='<i class="fas fa-spinner fa-spin"></i> Subiendo...';est.style.color='#1a237e';document.getElementById('btnGuardarE').disabled=true;return;}
+        document.getElementById('btnGuardarE').disabled=false;
+        if(url){document.getElementById('imagenUrl').value=url;est.textContent='✓ Nueva imagen subida';est.style.color='#2e7d32';err.textContent='';}
+        else{est.textContent=e.imagen_url?'✓ Imagen actual (sin cambios)':'Sin imagen';est.style.color=e.imagen_url?'#2e7d32':'#aaa';err.textContent=error||'';}
+      });
+  }
+
+  async function guardarEquipo() {
+    const nombre_equipo=document.getElementById('eNombre').value.trim();
+    const id_tipo=document.getElementById('eTipo').value;
+    const modelo=document.getElementById('eModelo').value;
+    const stock=parseInt(document.getElementById('eStock').value);
+    const disponibilidad=parseInt(document.getElementById('eDisp').value);
+    const numero_inventario=document.getElementById('eNumInv').value.trim()||null;
+    const descripcion=document.getElementById('eDesc').value.trim();
+    const imagen_url=document.getElementById('imagenUrl').value;
+
+    document.querySelectorAll('#formWrap .field-error').forEach(e=>e.classList.remove('show'));
+    document.querySelectorAll('#formWrap .form-control').forEach(e=>e.classList.remove('error'));
+    document.getElementById('errorE').textContent='';
+
+    let valid=true;
+    if(!nombre_equipo){document.getElementById('eNombre').classList.add('error');document.getElementById('error-nombre').classList.add('show');valid=false;}
+    if(!id_tipo){document.getElementById('eTipo').classList.add('error');document.getElementById('error-tipo').classList.add('show');valid=false;}
+    if(!modelo){document.getElementById('eModelo').classList.add('error');document.getElementById('error-modelo').classList.add('show');valid=false;}
+    if(isNaN(stock)||stock<0){document.getElementById('eStock').classList.add('error');document.getElementById('error-stock').classList.add('show');valid=false;}
+    if(isNaN(disponibilidad)||disponibilidad<0||(!isNaN(stock)&&disponibilidad>stock)){
+      document.getElementById('eDisp').classList.add('error');
+      const m=document.getElementById('error-disponibilidad');
+      m.textContent=disponibilidad>stock?'La disponibilidad no puede ser mayor que el stock':'La disponibilidad debe ser mayor o igual a 0';
+      m.classList.add('show');valid=false;
+    }
+    if(!descripcion){document.getElementById('eDesc').classList.add('error');document.getElementById('error-descripcion').classList.add('show');valid=false;}
+
+    if(!valid){document.querySelector('#formWrap .error')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+
+    const conf=await Swal.fire({title:'¿Guardar cambios?',text:`Se actualizará "${nombre_equipo}".`,icon:'question',showCancelButton:true,confirmButtonColor:'#1a237e',cancelButtonColor:'#757575',confirmButtonText:'Sí, guardar',cancelButtonText:'Cancelar'});
+    if(!conf.isConfirmed)return;
+
+    const btn=document.getElementById('btnGuardarE');
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    try{
+      const res=await fetch(`${API_URL}/api/inventario/${id}`,{method:'PUT',headers:authHeaders(true),
+        body:JSON.stringify({nombre_equipo,modelo:parseInt(modelo),id_tipo:parseInt(id_tipo),stock,disponibilidad,numero_inventario,descripcion,imagen_url})
+      }).then(r=>r.json());
+      if(res.message){
+        await Swal.fire({icon:'success',title:'¡Listo!',text:'Equipo actualizado correctamente.',confirmButtonColor:'#1a237e'});
+        window.location.href='inventario.html';
+      }else{document.getElementById('errorE').textContent=res.error||'Error al guardar.';}
+    }catch(e){document.getElementById('errorE').textContent='Error de conexión.';}
+    finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Guardar cambios';}
+  }
+
+  async function confirmarCancelar(){
+    const conf=await Swal.fire({title:'¿Cancelar?',text:'Los cambios no se guardarán.',icon:'warning',showCancelButton:true,confirmButtonColor:'#c62828',cancelButtonColor:'#757575',confirmButtonText:'Sí, salir',cancelButtonText:'Seguir editando'});
+    if(conf.isConfirmed)window.location.href='inventario.html';
+  }
+  cargarEquipo();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

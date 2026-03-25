@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Usuario – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .field-error { color:#c62828; font-size:.82em; margin-top:4px; display:none; }
+    .field-error.show { display:block; }
+    .form-control.error { border-color:#c62828; }
+    .info-box { background:#e8f4fd; border-left:4px solid #1a237e; padding:10px 14px; border-radius:6px; font-size:.84em; margin-top:8px; }
+    #matricula-container { display:block; }
+    #matricula-container.hidden { display:none; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+    @media(max-width:640px){ .grid-3{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html" class="active"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Agregar Usuario</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Registrar nuevo usuario o administrador</p>
+        </div>
+        <a href="usuarios.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+
+      <div style="max-width:680px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
+
+        <div class="form-group">
+          <label class="form-label">Tipo de usuario <span style="color:#c62828">*</span></label>
+          <select class="form-control" id="tipo_usuario" name="tipo_usuario">
+            <option value="">Seleccionar tipo...</option>
+            <option value="ALUMNO">Usuario (Alumno)</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+          </select>
+          <p class="field-error" id="error-tipo">Debe seleccionar un tipo de usuario</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label class="form-label">Nombre <span style="color:#c62828">*</span></label>
+            <input type="text" class="form-control" id="nombre" maxlength="50" placeholder="Nombre(s)">
+            <p class="field-error" id="error-nombre">El nombre es obligatorio</p>
+            <p class="field-error" id="error-nombre-letras">El nombre solo puede contener letras</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido Paterno <span style="color:#c62828">*</span></label>
+            <input type="text" class="form-control" id="apellido_p" maxlength="50">
+            <p class="field-error" id="error-apellido-p">El apellido paterno es obligatorio</p>
+            <p class="field-error" id="error-apellido-p-letras">Solo puede contener letras</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido Materno</label>
+            <input type="text" class="form-control" id="apellido_m" maxlength="50">
+            <p class="field-error" id="error-apellido-m-letras">Solo puede contener letras</p>
+          </div>
+        </div>
+
+        <div id="matricula-container">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label class="form-label">Matrícula <span style="color:#c62828">*</span></label>
+              <input type="text" class="form-control" id="matricula" maxlength="20" placeholder="Solo números">
+              <p class="field-error" id="error-matricula">La matrícula es obligatoria para alumnos</p>
+              <p class="field-error" id="error-matricula-numeros">La matrícula solo puede contener números</p>
+              <p style="font-size:.8em;color:#888;margin-top:4px"><i class="fas fa-info-circle"></i> La contraseña inicial será la matrícula</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Teléfono</label>
+              <input type="text" class="form-control" id="telefono" maxlength="10" placeholder="10 dígitos">
+              <p class="field-error" id="error-telefono">El teléfono debe tener 10 dígitos numéricos</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correo electrónico <span style="color:#c62828">*</span></label>
+          <input type="email" class="form-control" id="correo" maxlength="100" placeholder="ejemplo@uthh.edu.mx">
+          <p class="field-error" id="error-correo">Debe ingresar un correo electrónico válido</p>
+        </div>
+
+        <div id="info-box-container" class="info-box" style="display:none">
+          <i class="fas fa-info-circle"></i> <span id="info-box-text"></span>
+        </div>
+
+        <p id="errorGeneral" style="color:#c62828;font-size:.85em;min-height:18px;margin-top:12px"></p>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardarUsuario()"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  document.getElementById('tipo_usuario').addEventListener('change', function() {
+    const esMat = this.value === 'ALUMNO';
+    document.getElementById('matricula-container').classList.toggle('hidden', !esMat);
+    const infoBox = document.getElementById('info-box-container');
+    const infoTxt = document.getElementById('info-box-text');
+    if (this.value === 'ALUMNO') {
+      infoBox.style.display = 'block';
+      infoTxt.textContent = 'La contraseña del usuario será su número de matrícula.';
+    } else if (this.value === 'ADMINISTRADOR') {
+      infoBox.style.display = 'block';
+      infoTxt.textContent = 'La contraseña del administrador será: admin123';
+    } else {
+      infoBox.style.display = 'none';
+    }
+  });
+
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => limpiarError(el));
+    el.addEventListener('change', () => limpiarError(el));
+  });
+
+  function limpiarError(el) {
+    el.classList.remove('error');
+    document.querySelectorAll(`[id^="error-${el.id.replace('_','-')}"]`).forEach(e => e.classList.remove('show'));
+  }
+
+  function mostrarError(id, show = true) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('show', show);
+  }
+  function marcarCampo(id, error = true) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('error', error);
+  }
+
+  async function guardarUsuario() {
+    const tipo      = document.getElementById('tipo_usuario').value;
+    const nombre    = document.getElementById('nombre').value.trim();
+    const apellido_p = document.getElementById('apellido_p').value.trim();
+    const apellido_m = document.getElementById('apellido_m').value.trim();
+    const matricula = document.getElementById('matricula').value.trim();
+    const telefono  = document.getElementById('telefono').value.trim();
+    const correo    = document.getElementById('correo').value.trim();
+    const errorGen  = document.getElementById('errorGeneral');
+
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
+    errorGen.textContent = '';
+
+    let valid = true;
+
+    if (!tipo) { marcarCampo('tipo_usuario'); mostrarError('error-tipo'); valid = false; }
+
+    if (!nombre) { marcarCampo('nombre'); mostrarError('error-nombre'); valid = false; }
+    else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(nombre)) { marcarCampo('nombre'); mostrarError('error-nombre-letras'); valid = false; }
+
+    if (!apellido_p) { marcarCampo('apellido_p'); mostrarError('error-apellido-p'); valid = false; }
+    else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(apellido_p)) { marcarCampo('apellido_p'); mostrarError('error-apellido-p-letras'); valid = false; }
+
+    if (apellido_m && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(apellido_m)) { marcarCampo('apellido_m'); mostrarError('error-apellido-m-letras'); valid = false; }
+
+    if (tipo === 'ALUMNO') {
+      if (!matricula) { marcarCampo('matricula'); mostrarError('error-matricula'); valid = false; }
+      else if (!/^\d+$/.test(matricula)) { marcarCampo('matricula'); mostrarError('error-matricula-numeros'); valid = false; }
+    }
+
+    if (telefono) {
+      if (!/^\d{10}$/.test(telefono)) { marcarCampo('telefono'); mostrarError('error-telefono'); valid = false; }
+    }
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!correo || !emailRe.test(correo)) { marcarCampo('correo'); mostrarError('error-correo'); valid = false; }
+
+    if (!valid) {
+      document.querySelector('.error')?.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+
+    const conf = await Swal.fire({
+      title: '¿Registrar usuario?',
+      text: tipo === 'ALUMNO'
+        ? `Se registrará a ${nombre} ${apellido_p}. La contraseña inicial será su matrícula.`
+        : `Se registrará al administrador ${nombre} ${apellido_p}. Contraseña inicial: admin123`,
+      icon: 'question', showCancelButton: true,
+      confirmButtonColor: '#1a237e', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, registrar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    const body = { nombre, apellido_p, apellido_m, Matricula: matricula, correo, telefono, tipo_usuario: tipo };
+    // La contraseña la genera el servidor: matrícula para ALUMNO, admin123 para ADMINISTRADOR
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      }).then(r => r.json());
+
+      if (res.message && !res.error) {
+        await Swal.fire({
+          icon:'success', title:'¡Registrado!',
+          text: res.message,
+          confirmButtonColor:'#1a237e'
+        });
+        window.location.href = 'usuarios.html';
+      } else {
+        errorGen.textContent = res.message || res.error || 'Error al registrar.';
+      }
+    } catch(e) { errorGen.textContent = 'Error de conexión.'; }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar'; }
+  }
+
+  async function confirmarCancelar() {
+    const conf = await Swal.fire({
+      title:'¿Cancelar?', text:'Los datos ingresados se perderán.',
+      icon:'warning', showCancelButton:true,
+      confirmButtonColor:'#c62828', cancelButtonColor:'#757575',
+      confirmButtonText:'Sí, salir', cancelButtonText:'Seguir editando'
+    });
+    if (conf.isConfirmed) window.location.href = 'usuarios.html';
+  }
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

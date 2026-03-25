@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Usuario – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content" id="pageContent">
+
+      <div class="flex-between mb-3">
+        <div><h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Historial de Usuario</h1></div>
+        <a href="usuarios.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+      <div id="infoUsuario"></div>
+      <div class="table-wrapper">
+        <table id="tablaHistorial">
+          <thead><tr><th>#</th><th>Equipo</th><th>Inicio</th><th>Devolución</th><th>Estado</th></tr></thead>
+          <tbody><tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  async function cargarHistorial() {
+    if (!id) { document.getElementById('infoUsuario').textContent='ID de usuario no especificado.'; return; }
+    try {
+      const [usuario, historial] = await Promise.all([
+        fetch(API_URL+'/api/usuarios/'+id, {headers:authHeaders()}).then(r=>r.json()),
+        fetch(API_URL+'/api/prestamos/usuario/'+id, {headers:authHeaders()}).then(r=>r.json()),
+      ]);
+      if (usuario && usuario.nombre) {
+        document.getElementById('infoUsuario').innerHTML = `
+          <div style="background:var(--white);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;margin-bottom:24px">
+            <img src="../../img/default_user.png" style="width:60px;height:60px;border-radius:50%;border:2px solid var(--primary)">
+            <div>
+              <h3 style="font-size:1em;font-weight:700;color:var(--primary)">${usuario.nombre} ${usuario.apellido_p} ${usuario.apellido_m||''}</h3>
+              <p style="font-size:.82em;color:var(--text-muted)">Matrícula: ${usuario.Matricula||'—'} · ${usuario.tipo_usuario} · ${usuario.correo}</p>
+            </div>
+          </div>`;
+      }
+      const tbody = document.querySelector('#tablaHistorial tbody');
+      tbody.innerHTML = Array.isArray(historial) && historial.length
+        ? historial.map(p=>`
+          <tr>
+            <td>${p.id_prestamo}</td>
+            <td>${p.nombre_equipo||'N/A'}</td>
+            <td>${fmtFecha(p.fecha_prestamo)}</td>
+            <td>${fmtFecha(p.fecha_devolucion)}</td>
+            <td><span class="status ${estadoClase(p.estado_prestamo)}">${p.estado_prestamo||'N/A'}</span></td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Sin historial de préstamos.</td></tr>';
+    } catch(e){ console.error(e); }
+  }
+
+  cargarHistorial();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

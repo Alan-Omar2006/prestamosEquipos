@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil – Sistema de Préstamos UTHH</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .perfil-card { max-width:640px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:36px }
+    .form-row    { display:grid;grid-template-columns:1fr 1fr;gap:16px }
+    @media(max-width:540px){ .form-row{ grid-template-columns:1fr } }
+    .field-error { color:#c62828;font-size:.82em;margin-top:4px;display:none }
+    .field-error.show { display:block }
+    .form-control.error { border-color:#c62828;border-width:2px }
+    .req-note { background:#fff3e0; border-left:4px solid #ff9800; padding:8px 12px; border-radius:6px; font-size:.8em; margin-top:4px; }
+    @media(max-width:700px){ .perfil-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div id="header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+
+    <aside class="sidebar" id="userSidebar">
+      <span class="sidebar-label">Mi Cuenta</span>
+      <a href="mis_prestamos.html"><i class="fas fa-box-open"></i> Mis Préstamos</a>
+      <a href="perfil.html" class="active"><i class="fas fa-user"></i> Mi Perfil</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Explorar</span>
+      <a href="../../pages/catalogo.html"><i class="fas fa-laptop"></i> Catálogo</a>
+      <a href="../../index.html"><i class="fas fa-home"></i> Inicio</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Sesión</span>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Mi Perfil</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Edita tu información personal</p>
+        </div>
+      </div>
+      <div class="perfil-card" id="perfilFormCard">
+        <p style="text-align:center;color:#888"><i class="fas fa-spinner fa-spin"></i> Cargando perfil...</p>
+      </div>
+    </div><!-- /admin-content -->
+  </div><!-- /admin-layout -->
+</main>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Mi Cuenta</h4>
+        <ul>
+          <li><a href="mis_prestamos.html">Mis Préstamos</a></li>
+          <li><a href="perfil.html">Mi Perfil</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+
+<script src="../../js/admin-helper.js"></script>
+<script src="../../js/cloudinary-upload.js"></script>
+<script>
+  const user = protegerUsuario();
+  inyectarHeaderUsuario(user);
+  inyectarFooterUsuario();
+
+  async function cargarPerfil() {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/perfil`, { headers: authHeaders() });
+      const d = await res.json();
+      if (!d || d.error) { renderError('No se pudo cargar el perfil.'); return; }
+      renderFormulario(d);
+    } catch(e) {
+      renderError('Error de conexión.');
+    }
+  }
+
+  function renderError(msg) {
+    document.getElementById('perfilFormCard').innerHTML =
+      `<p style="color:#c62828;text-align:center">${msg}</p>`;
+  }
+
+  function renderFormulario(d) {
+    const imgActual = d.imagen_url || '../../img/default_user.png';
+    document.getElementById('perfilFormCard').innerHTML = `
+
+      <div style="text-align:center;margin-bottom:28px">
+        <img id="avatarPreview" src="${imgActual}" onerror="this.src='../../img/default_user.png'"
+          data-default="../../img/default_user.png"
+          style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.15)">
+        <p id="imgEstado" style="margin-top:8px;font-size:.82em;color:${d.imagen_url ? '#2e7d32' : '#aaa'}">
+          ${d.imagen_url ? '✓ Foto de perfil actual' : 'Sin foto de perfil'}
+        </p>
+        <input type="file" id="inputAvatar" accept="image/jpeg,image/jpg,image/png,image/webp"
+          style="margin-top:6px">
+        <p id="errorImg" style="color:#c62828;font-size:.82em;min-height:14px;margin-top:2px"></p>
+      </div>
+      <input type="hidden" id="pImagen" value="${d.imagen_url || ''}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input type="text" class="form-control" id="pNombre" value="${d.nombre || ''}" maxlength="100">
+          <p class="field-error" id="error-nombre">El nombre es obligatorio</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido Paterno *</label>
+          <input type="text" class="form-control" id="pApellidoP" value="${d.apellido_p || ''}" maxlength="100">
+          <p class="field-error" id="error-apellido-p">El apellido paterno es obligatorio</p>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Apellido Materno</label>
+          <input type="text" class="form-control" id="pApellidoM" value="${d.apellido_m || ''}" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Matrícula</label>
+          <input type="text" class="form-control" value="${d.Matricula || ''}" disabled
+            style="background:#f5f5f5;color:#888;cursor:not-allowed">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" value="${d.correo || ''}" disabled
+          style="background:#f5f5f5;color:#888;cursor:not-allowed">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input type="text" class="form-control" id="pTelefono" value="${d.telefono || ''}" maxlength="15">
+      </div>
+
+      <hr style="margin:24px 0;border:none;border-top:1px solid #eef0f8">
+      <p style="font-size:.9em;font-weight:700;color:var(--primary);margin-bottom:16px">Cambiar contraseña</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nueva contraseña</label>
+          <input type="password" class="form-control" id="pPass" maxlength="100" placeholder="Dejar vacío para no cambiar">
+          <p class="field-error" id="error-pass">Mínimo 6 caracteres</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmar contraseña</label>
+          <input type="password" class="form-control" id="pPassConf" maxlength="100">
+          <p class="field-error" id="error-pass-conf">Las contraseñas no coinciden</p>
+        </div>
+      </div>
+
+      <p id="errorPerfil" style="color:#c62828;font-size:.85em;min-height:18px;margin-top:12px"></p>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn btn-primary" id="btnGuardarPerfil" onclick="guardarPerfil()">
+          <i class="fas fa-save"></i> Guardar cambios
+        </button>
+      </div>
+    `;
+
+    configurarInputImagen(
+      document.getElementById('inputAvatar'),
+      document.getElementById('avatarPreview'),
+      'usuarios',
+      (url, err, loading) => {
+        const estado = document.getElementById('imgEstado');
+        const errEl  = document.getElementById('errorImg');
+        if (loading) { if(estado) estado.textContent = 'Subiendo imagen...'; return; }
+        if (err)     { if(errEl)  errEl.textContent = err; return; }
+        if (url)     {
+          document.getElementById('pImagen').value = url;
+          if(estado) { estado.textContent = '✓ Nueva imagen lista'; estado.style.color='#2e7d32'; }
+        }
+      }
+    );
+  }
+
+  function initFotoUpload() {
+    const inputEl   = document.getElementById('fotoFile');
+    const previewEl = document.getElementById('fotoPreview');
+    if (!inputEl || !previewEl) return;
+    configurarInputImagen(inputEl, previewEl, 'usuarios', function(url, error, cargando) {
+      const status = document.getElementById('fotoStatus');
+      if (cargando) { if (status) status.textContent = 'Subiendo foto...'; return; }
+      if (url) {
+        let hidden = document.getElementById('nuevaFotoUrl');
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden'; hidden.id = 'nuevaFotoUrl';
+          document.body.appendChild(hidden);
+        }
+        hidden.value = url;
+        if (status) { status.textContent = '✓ Foto lista para guardar'; status.style.color = '#2e7d32'; }
+        // Actualizar el avatar del header
+
+        document.querySelectorAll('.user-avatar').forEach(img => img.src = url);
+      } else {
+        if (status) { status.textContent = error || 'Error al subir'; status.style.color = '#c62828'; }
+      }
+    });
+  }
+
+  async function guardarPerfil() {
+    const nombre   = document.getElementById('pNombre')?.value.trim()   || '';
+    const apellidoP= document.getElementById('pApellidoP')?.value.trim()|| '';
+    const apellidoM= document.getElementById('pApellidoM')?.value.trim()|| '';
+    const telefono = document.getElementById('pTelefono')?.value.trim() || '';
+    const pass     = document.getElementById('pPass')?.value            || '';
+    const passConf = document.getElementById('pPassConf')?.value        || '';
+    const imagen   = document.getElementById('pImagen')?.value          || '';
+    const errorEl  = document.getElementById('errorPerfil');
+
+    document.querySelectorAll('#perfilFormCard .field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('#perfilFormCard .form-control').forEach(e => e.classList.remove('error'));
+    errorEl.textContent = '';
+
+    let valid = true;
+    if (!nombre) {
+      document.getElementById('pNombre').classList.add('error');
+      document.getElementById('error-nombre').classList.add('show');
+      valid = false;
+    }
+    if (!apellidoP) {
+      document.getElementById('pApellidoP').classList.add('error');
+      document.getElementById('error-apellido-p').classList.add('show');
+      valid = false;
+    }
+    if (pass && pass.length < 6) {
+      document.getElementById('pPass').classList.add('error');
+      document.getElementById('error-pass').classList.add('show');
+      valid = false;
+    }
+    if (pass && pass !== passConf) {
+      document.getElementById('pPassConf').classList.add('error');
+      document.getElementById('error-pass-conf').classList.add('show');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const body = { nombre, apellido_p: apellidoP, apellido_m: apellidoM, telefono };
+    if (imagen) body.imagen_url = imagen;
+    if (pass)   body.contrasena = pass;
+
+    const btn = document.getElementById('btnGuardarPerfil');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/usuarios/perfil`, {
+        method: 'PUT',
+        headers: authHeaders(true),
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar');
+
+      await Swal.fire({
+        icon: 'success', title: '¡Perfil actualizado!',
+        text: 'Tus datos han sido guardados correctamente.',
+        confirmButtonColor: '#1a237e', timer: 2000, showConfirmButton: false
+      });
+      cargarPerfil();
+    } catch(e) {
+      errorEl.textContent = e.message;
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+    }
+  }
+
+  cargarPerfil();
+</script>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

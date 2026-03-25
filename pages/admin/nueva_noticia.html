@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nueva Noticia – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .field-error{color:#c62828;font-size:.82em;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .form-control.error{border-color:#c62828;border-width:2px}
+    .counter{text-align:right;font-size:.78em;color:#aaa;margin-top:2px}
+    .img-error{color:#c62828;font-size:.82em;margin-top:4px;min-height:16px}
+    .img-error.show{display:block}
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html" class="active"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion();return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Nueva Noticia</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Publicar nueva noticia en el sistema</p>
+        </div>
+        <a href="noticias.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+      </div>
+
+      <div style="max-width:680px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
+
+        <div class="form-group">
+          <label class="form-label">Título <span style="color:#c62828">*</span></label>
+          <input type="text" class="form-control" id="nTitulo" maxlength="200"
+                 placeholder="Ej: Nueva actualización del sistema de préstamos">
+          <p class="counter"><span id="cntTitulo">0</span>/200 caracteres</p>
+          <p class="field-error" id="error-titulo">El título es obligatorio y debe tener al menos 5 caracteres</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Descripción <span style="color:#c62828">*</span></label>
+          <textarea class="form-control" id="nDesc" rows="3" maxlength="500"
+                    placeholder="Resumen breve visible en el listado de noticias..."></textarea>
+          <p class="counter"><span id="cntDesc">0</span>/500 caracteres</p>
+          <p class="field-error" id="error-descripcion">La descripción es obligatoria y debe tener al menos 10 caracteres</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contenido completo <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+          <textarea class="form-control" id="nContenido" rows="5" placeholder="Texto completo de la noticia..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Imagen de la noticia <span style="color:#c62828">*</span></label>
+          <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+            <div style="flex-shrink:0">
+              <img id="imgPreview" src="../../img/picture.png" data-default="../../img/picture.png"
+                   style="width:160px;height:110px;object-fit:cover;border-radius:10px;border:2px dashed #ccc;background:#fafafa">
+              <p id="imgEstado" style="font-size:.78em;text-align:center;margin-top:4px;color:#aaa">Sin imagen</p>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <p style="font-size:.85em;color:#666;margin-bottom:8px">Selecciona un archivo JPG, PNG o WEBP (máx. 5 MB)</p>
+              <input type="file" id="inputImagen" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:block;width:100%">
+              <p class="field-error" id="errorImg" style="min-height:14px;margin-top:4px"></p>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="imagenUrl">
+
+        <p id="errorNot" style="color:#c62828;font-size:.85em;min-height:18px"></p>
+        <div style="display:flex;gap:12px;margin-top:4px">
+          <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardarNoticia()"><i class="fas fa-save"></i> Publicar noticia</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="../../js/admin-helper.js"></script>
+<script src="../../js/cloudinary-upload.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  document.getElementById('nTitulo').addEventListener('input', function() {
+    document.getElementById('cntTitulo').textContent = this.value.length;
+    this.classList.remove('error');
+    document.getElementById('error-titulo').classList.remove('show');
+  });
+  document.getElementById('nDesc').addEventListener('input', function() {
+    document.getElementById('cntDesc').textContent = this.value.length;
+    this.classList.remove('error');
+    document.getElementById('error-descripcion').classList.remove('show');
+  });
+
+  configurarInputImagen(document.getElementById('inputImagen'), document.getElementById('imgPreview'), 'noticias',
+    function(url, error, cargando) {
+      const est = document.getElementById('imgEstado'), err = document.getElementById('errorImg');
+      if (cargando) {
+        est.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+        est.style.color = '#1a237e';
+        err.textContent = '';
+        document.getElementById('btnGuardar').disabled = true;
+        return;
+      }
+      document.getElementById('btnGuardar').disabled = false;
+      if (url) {
+        document.getElementById('imagenUrl').value = url;
+        est.textContent = '✓ Imagen subida';
+        est.style.color = '#2e7d32';
+        err.textContent = '';
+        err.classList.remove('show');
+        document.getElementById('inputImagen').classList.remove('error');
+      } else {
+        document.getElementById('imagenUrl').value = '';
+        est.textContent = 'Sin imagen';
+        est.style.color = '#aaa';
+        err.textContent = error || 'Error al subir imagen.';
+        err.classList.add('show');
+      }
+    });
+
+  async function guardarNoticia() {
+    const titulo      = document.getElementById('nTitulo').value.trim();
+    const descripcion = document.getElementById('nDesc').value.trim();
+    const contenido   = document.getElementById('nContenido').value.trim();
+    const imagen_url  = document.getElementById('imagenUrl').value;
+
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
+    document.getElementById('errorNot').textContent = '';
+
+    let valid = true;
+
+    if (!titulo || titulo.length < 5) {
+      document.getElementById('nTitulo').classList.add('error');
+      document.getElementById('error-titulo').textContent = !titulo ? 'El título es obligatorio' : 'El título debe tener al menos 5 caracteres';
+      document.getElementById('error-titulo').classList.add('show');
+      valid = false;
+    }
+    if (!descripcion || descripcion.length < 10) {
+      document.getElementById('nDesc').classList.add('error');
+      document.getElementById('error-descripcion').textContent = !descripcion ? 'La descripción es obligatoria' : 'La descripción debe tener al menos 10 caracteres';
+      document.getElementById('error-descripcion').classList.add('show');
+      valid = false;
+    }
+    if (!imagen_url) {
+      document.getElementById('errorImg').textContent = 'Debe subir una imagen para la noticia.';
+      document.getElementById('errorImg').classList.add('show');
+      valid = false;
+    }
+
+    if (!valid) {
+      document.querySelector('.error, #errorImg.show')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const conf = await Swal.fire({
+      title: '¿Publicar noticia?',
+      text: `Se publicará "${titulo}".`,
+      icon: 'question', showCancelButton: true,
+      confirmButtonColor: '#1a237e', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, publicar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/noticias`, {
+        method: 'POST', headers: authHeaders(true),
+        body: JSON.stringify({ titulo, descripcion, contenido, imagen_url })
+      }).then(r => r.json());
+
+      if (res.message) {
+        await Swal.fire({ icon: 'success', title: '¡Publicada!', text: 'La noticia se publicó correctamente.', confirmButtonColor: '#1a237e' });
+        window.location.href = 'noticias.html';
+      } else {
+        document.getElementById('errorNot').textContent = res.error || 'Error al guardar.';
+      }
+    } catch(e) {
+      document.getElementById('errorNot').textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Publicar noticia';
+    }
+  }
+
+  async function confirmarCancelar() {
+    const conf = await Swal.fire({
+      title: '¿Cancelar?', text: 'No se guardará la noticia.',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, salir', cancelButtonText: 'Seguir editando'
+    });
+    if (conf.isConfirmed) window.location.href = 'noticias.html';
+  }
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

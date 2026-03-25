@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil – Admin</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .perfil-card { max-width:640px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:36px }
+    .form-row    { display:grid;grid-template-columns:1fr 1fr;gap:16px }
+    @media(max-width:540px){ .form-row{ grid-template-columns:1fr } }
+    .req-pass    { background:#fff3e0;border-left:4px solid #ff9800;padding:9px 13px;border-radius:6px;font-size:.81em;margin-top:6px }
+    .field-error { color:#c62828;font-size:.82em;margin-top:4px;display:none }
+    .field-error.show { display:block }
+    .form-control.error { border-color:#c62828;border-width:2px }
+  </style>
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html" class="active"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Mi Perfil</h1>
+          <p style="font-size:.85em;color:var(--text-muted)">Edita tu información de administrador</p>
+        </div>
+      </div>
+      <div class="perfil-card" id="perfilCard">
+        <p style="text-align:center;color:#888"><i class="fas fa-spinner fa-spin"></i> Cargando perfil...</p>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="../../js/admin-helper.js"></script>
+<script src="../../js/cloudinary-upload.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  async function cargarPerfil() {
+    try {
+      const data = await fetch(`${API_URL}/api/auth/perfil`, { headers: authHeaders() }).then(r => r.json());
+      if (!data || data.error)
+        { document.getElementById('perfilCard').innerHTML = '<p style="color:#c62828;text-align:center">No se pudo cargar el perfil.</p>'; return; }
+      renderFormulario(data);
+    } catch(e) {
+      document.getElementById('perfilCard').innerHTML = '<p style="color:#c62828;text-align:center">Error de conexión.</p>';
+    }
+  }
+
+  function renderFormulario(d) {
+    const imgActual = d.imagen_url || '../../img/default_admin.png';
+    document.getElementById('perfilCard').innerHTML = `
+      
+      <div style="text-align:center;margin-bottom:28px">
+        <img id="avatarPreview" src="${imgActual}" onerror="this.src='../../img/default_admin.png'"
+          data-default="../../img/default_admin.png"
+          style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.15)">
+        <p id="imgEstado" style="margin-top:8px;font-size:.82em;color:${d.imagen_url ? '#2e7d32' : '#aaa'}">
+          ${d.imagen_url ? '✓ Foto de perfil actual' : 'Sin foto de perfil'}
+        </p>
+        <input type="file" id="inputAvatar" accept="image/jpeg,image/jpg,image/png,image/webp"
+          style="margin-top:6px">
+        <p id="errorImg" style="color:#c62828;font-size:.82em;min-height:14px;margin-top:2px"></p>
+      </div>
+      <input type="hidden" id="pImagen" value="${d.imagen_url || ''}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input type="text" class="form-control" id="pNombre" value="${d.nombre || ''}" maxlength="100">
+          <p class="field-error" id="error-nombre">El nombre es obligatorio</p>
+          <p class="field-error" id="error-nombre-letras">El nombre solo puede contener letras</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido Paterno <span style="color:#c62828">*</span></label>
+          <input type="text" class="form-control" id="pApellidoP" value="${d.apellido_Paterno || ''}" maxlength="100">
+          <p class="field-error" id="error-apellido-p">El apellido paterno es obligatorio</p>
+          <p class="field-error" id="error-apellido-p-letras">El apellido solo puede contener letras</p>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Apellido Materno</label>
+          <input type="text" class="form-control" id="pApellidoM" value="${d.apellido_Materno || ''}" maxlength="100">
+          <p class="field-error" id="error-apellido-m-letras">El apellido solo puede contener letras</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo <span style="color:#c62828">*</span></label>
+          <input type="email" class="form-control" id="pCorreo" value="${d.Correo || d.correo || ''}" maxlength="100">
+          <p class="field-error" id="error-correo">Debe ingresar un correo electrónico válido</p>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+      <p style="font-size:.85em;font-weight:600;color:var(--text-muted);margin-bottom:12px">Cambiar contraseña</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nueva contraseña <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+          <input type="password" class="form-control" id="pPass" placeholder="Mínimo 6 caracteres" maxlength="255">
+          <p class="field-error" id="error-pass">La contraseña debe tener al menos 6 caracteres</p>
+          <div class="req-pass">⚠️ Mínimo 6 caracteres. Deja vacío para no cambiar.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmar contraseña</label>
+          <input type="password" class="form-control" id="pPassConf" placeholder="Repetir contraseña" maxlength="255">
+          <p class="field-error" id="error-pass-conf">Las contraseñas no coinciden</p>
+        </div>
+      </div>
+      <p id="errorPerfil" style="color:#c62828;font-size:.85em;min-height:18px"></p>
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-primary" id="btnGuardarPerfil" onclick="guardarPerfil()"><i class="fas fa-save"></i> Guardar cambios</button>
+      </div>
+    `;
+
+    configurarInputImagen(
+      document.getElementById('inputAvatar'),
+      document.getElementById('avatarPreview'),
+      'admins',
+      function onResult(url, error, cargando) {
+        const estado = document.getElementById('imgEstado');
+        const errEl  = document.getElementById('errorImg');
+        if (cargando) {
+          estado.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo foto...';
+          estado.style.color = '#1a237e';
+          document.getElementById('btnGuardarPerfil').disabled = true;
+          return;
+        }
+        document.getElementById('btnGuardarPerfil').disabled = false;
+        if (url) {
+          document.getElementById('pImagen').value = url;
+          estado.textContent = '✓ Nueva foto lista';
+          estado.style.color = '#2e7d32';
+          errEl.textContent = '';
+        } else {
+          estado.textContent = d.imagen_url ? '✓ Foto de perfil actual' : 'Sin foto de perfil';
+          estado.style.color = d.imagen_url ? '#2e7d32' : '#aaa';
+          errEl.textContent = error || '';
+        }
+      }
+    );
+  }
+
+  async function guardarPerfil() {
+    const nombre     = document.getElementById('pNombre').value.trim();
+    const apellido_p = document.getElementById('pApellidoP').value.trim();
+    const apellido_m = document.getElementById('pApellidoM').value.trim();
+    const correo     = document.getElementById('pCorreo').value.trim();
+    const imagen_url = document.getElementById('pImagen').value;
+    const pass       = document.getElementById('pPass').value;
+    const passConf   = document.getElementById('pPassConf').value;
+    const errorEl    = document.getElementById('errorPerfil');
+
+    document.querySelectorAll('#perfilCard .field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('#perfilCard .form-control').forEach(e => e.classList.remove('error'));
+    errorEl.textContent = '';
+
+    const letrasRe = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+    const emailRe  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let valid = true;
+
+    if (!nombre) {
+      document.getElementById('pNombre').classList.add('error');
+      document.getElementById('error-nombre').classList.add('show');
+      valid = false;
+    } else if (!letrasRe.test(nombre)) {
+      document.getElementById('pNombre').classList.add('error');
+      document.getElementById('error-nombre-letras').classList.add('show');
+      valid = false;
+    }
+
+    if (!apellido_p) {
+      document.getElementById('pApellidoP').classList.add('error');
+      document.getElementById('error-apellido-p').classList.add('show');
+      valid = false;
+    } else if (!letrasRe.test(apellido_p)) {
+      document.getElementById('pApellidoP').classList.add('error');
+      document.getElementById('error-apellido-p-letras').classList.add('show');
+      valid = false;
+    }
+
+    if (apellido_m && !letrasRe.test(apellido_m)) {
+      document.getElementById('pApellidoM').classList.add('error');
+      document.getElementById('error-apellido-m-letras').classList.add('show');
+      valid = false;
+    }
+
+    if (!correo || !emailRe.test(correo)) {
+      document.getElementById('pCorreo').classList.add('error');
+      document.getElementById('error-correo').classList.add('show');
+      valid = false;
+    }
+
+    if (pass && pass.length < 6) {
+      document.getElementById('pPass').classList.add('error');
+      document.getElementById('error-pass').classList.add('show');
+      valid = false;
+    }
+
+    if (pass && pass !== passConf) {
+      document.getElementById('pPassConf').classList.add('error');
+      document.getElementById('error-pass-conf').classList.add('show');
+      valid = false;
+    }
+
+    if (!valid) {
+      document.querySelector('#perfilCard .error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const conf = await Swal.fire({
+      title: '¿Guardar cambios?', text: 'Se actualizará tu información de perfil.',
+      icon: 'question', showCancelButton: true,
+      confirmButtonColor: '#1a237e', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, guardar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+
+    const btn = document.getElementById('btnGuardarPerfil');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    const body = { nombre, apellido_p, apellido_m, correo, imagen_url };
+    if (pass) body.contrasena = pass;
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/perfil`, {
+        method: 'PUT', headers: authHeaders(true), body: JSON.stringify(body)
+      }).then(r => r.json());
+      if (res.message) {
+        await Swal.fire({ icon: 'success', title: '¡Listo!', text: 'Perfil actualizado correctamente.', confirmButtonColor: '#1a237e' });
+        cargarPerfil();
+      } else {
+        errorEl.textContent = res.error || 'Error al guardar.';
+      }
+    } catch(e) { errorEl.textContent = 'Error de conexión.'; }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios'; }
+  }
+
+  cargarPerfil();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

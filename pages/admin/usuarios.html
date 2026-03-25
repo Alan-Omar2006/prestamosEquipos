@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios – Panel Administrador</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div id="admin-header-placeholder"></div>
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html" class="active"><i class="fas fa-users"></i> Usuarios</a>
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Usuarios Registrados</h1>
+          <p style="font-size:0.85em;color:var(--text-muted)">Gestiona los usuarios del sistema</p>
+        </div>
+        <a href="agregar_usuario.html" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> Agregar Usuario</a>
+      </div>
+      <div class="filter-row">
+        <div class="search-bar" style="flex:1;max-width:320px">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchUser" placeholder="Buscar por nombre, matrícula o correo...">
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaUsuarios">
+          <thead>
+            <tr>
+              <th>Matrícula</th>
+              <th>Nombre</th>
+              <th>Apellidos</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  let _todosUsuarios = [];
+
+  async function cargarUsuarios() {
+    try {
+      const usuarios = await fetch(`${API_URL}/api/usuarios`, { headers: authHeaders() }).then(r => r.json());
+      _todosUsuarios = Array.isArray(usuarios) ? usuarios : [];
+      renderTabla(_todosUsuarios);
+
+      document.getElementById('searchUser').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        if (!q) { renderTabla(_todosUsuarios); return; }
+        const filtrados = _todosUsuarios.filter(u =>
+          (u.nombre || '').toLowerCase().includes(q) ||
+          (u.apellido_p || '').toLowerCase().includes(q) ||
+          (u.apellido_m || '').toLowerCase().includes(q) ||
+          (u.Matricula || '').toLowerCase().includes(q) ||
+          (u.correo || '').toLowerCase().includes(q)
+        );
+        renderTabla(filtrados);
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  function renderTabla(lista) {
+    const tbody = document.querySelector('#tablaUsuarios tbody');
+    tbody.innerHTML = lista.length
+      ? lista.map(u => {
+          const apellidos = [(u.apellido_p || ''), (u.apellido_m || '')].filter(Boolean).join(' ');
+          const nombreSeg = (u.nombre || '').replace(/'/g, "\\'");
+          return `<tr>
+            <td>${u.Matricula || '—'}</td>
+            <td>${u.nombre || '—'}</td>
+            <td>${apellidos || '—'}</td>
+            <td>${u.correo || '—'}</td>
+            <td>${u.telefono || '—'}</td>
+            <td class="td-actions">
+              <a href="editar_usuario.html?id=${u.id_usuario}" class="btn btn-outline btn-sm" title="Editar"><i class="fas fa-edit"></i> Editar</a>
+              <a href="historial_usuario.html?id=${u.id_usuario}" class="btn btn-primary btn-sm" title="Historial"><i class="fas fa-history"></i> Historial</a>
+              <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarUsuario(${u.id_usuario},'${nombreSeg}')"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888">No se encontraron usuarios.</td></tr>';
+  }
+
+  async function eliminarUsuario(id, nombre) {
+    const conf = await Swal.fire({
+      title: '¿Eliminar usuario?',
+      text: `Se eliminará a "${nombre}". Esta acción no se puede deshacer.`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res = await fetch(`${API_URL}/api/usuarios/${id}`, {
+        method: 'DELETE', headers: authHeaders()
+      }).then(r => r.json());
+      showToast(res.message || res.error, res.message ? 'success' : 'error');
+      if (res.message) cargarUsuarios();
+    } catch(e) { showToast('Error de conexión.', 'error'); }
+  }
+
+  cargarUsuarios();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador – Sistema de Préstamos UTHH</title>
+  <link rel="stylesheet" href="../../css/admin-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-card-icon {
+      width: 54px; height: 54px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5em;
+      flex-shrink: 0;
+    }
+    .icon-blue { background: rgba(26,35,126,0.12); color: var(--primary); }
+    .icon-green { background: #e8f5e9; color: #2e7d32; }
+    .icon-orange { background: #fff8e1; color: #f57f17; }
+    .icon-red { background: #ffebee; color: #c62828; }
+    .stat-card-text strong { display: block; font-size: 1.8em; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .stat-card-text span { font-size: 0.82em; color: var(--text-muted); }
+
+    .recent-table-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #eef0f8;
+    }
+    .box-header h3 { font-size: 0.95em; font-weight: 700; color: var(--primary); }
+
+    @media(max-width:900px){ .stat-cards{grid-template-columns:repeat(2,1fr);} }
+  </style>
+</head>
+<body>
+
+<div id="admin-header-placeholder"></div>
+
+<main style="margin-top:85px">
+  <div class="admin-layout">
+    
+    <aside class="sidebar" id="adminSidebar">
+      <span class="sidebar-label">Principal</span>
+      <a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="prestamos.html"><i class="fas fa-hand-holding"></i> Préstamos</a>
+      <a href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a>
+      <a href="usuarios.html"><i class="fas fa-users"></i> Usuarios</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Contenido</span>
+      <a href="noticias.html"><i class="fas fa-newspaper"></i> Noticias</a>
+
+      <span class="sidebar-label" style="margin-top:12px">Cuenta</span>
+      <a href="perfil_admin.html"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+      <a href="#" onclick="cerrarSesion(); return false;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="flex-between mb-3">
+        <div>
+          <h1 style="font-size:1.5em;font-weight:800;color:var(--primary)">Dashboard</h1>
+          <p style="font-size:0.85em;color:var(--text-muted)">Resumen general del sistema</p>
+        </div>
+        <a href="nuevo_prestamo.html" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus"></i> Nuevo Préstamo
+        </a>
+      </div>
+
+      <div class="stat-cards" id="statCards">
+        <div class="stat-card">
+          <div class="stat-card-icon icon-blue"><i class="fas fa-hand-holding"></i></div>
+          <div class="stat-card-text"><strong id="statActivos">—</strong><span>Préstamos activos</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon icon-green"><i class="fas fa-boxes"></i></div>
+          <div class="stat-card-text"><strong id="statDisponibles">—</strong><span>Equipos disponibles</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon icon-orange"><i class="fas fa-users"></i></div>
+          <div class="stat-card-text"><strong id="statUsuarios">—</strong><span>Usuarios registrados</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon icon-red"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-card-text"><strong id="statVencidos">—</strong><span>Préstamos vencidos</span></div>
+        </div>
+      </div>
+
+      <div class="recent-table-box mb-3">
+        <div class="box-header">
+          <h3><i class="fas fa-clock" style="margin-right:8px"></i>Préstamos recientes</h3>
+          <a href="prestamos.html" class="btn btn-outline btn-sm">Ver todos</a>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Usuario</th>
+                <th>Equipo</th>
+                <th>Fecha inicio</th>
+                <th>Fecha devolución</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRecientes">
+              <tr><td colspan="7" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <a href="nuevo_prestamo.html" style="text-decoration:none">
+          <div class="card" style="padding:24px;text-align:center;transition:all .3s">
+            <i class="fas fa-plus-circle" style="font-size:2em;color:var(--primary);margin-bottom:12px;display:block"></i>
+            <h4 style="font-size:.95em;font-weight:700;color:var(--primary)">Nuevo Préstamo</h4>
+            <p style="font-size:.82em;color:var(--text-muted);margin-top:4px">Registrar un préstamo manualmente</p>
+          </div>
+        </a>
+        <a href="nuevo_equipo.html" style="text-decoration:none">
+          <div class="card" style="padding:24px;text-align:center">
+            <i class="fas fa-laptop-medical" style="font-size:2em;color:var(--primary);margin-bottom:12px;display:block"></i>
+            <h4 style="font-size:.95em;font-weight:700;color:var(--primary)">Agregar Equipo</h4>
+            <p style="font-size:.82em;color:var(--text-muted);margin-top:4px">Incorporar nuevo equipo al inventario</p>
+          </div>
+        </a>
+        <a href="agregar_usuario.html" style="text-decoration:none">
+          <div class="card" style="padding:24px;text-align:center">
+            <i class="fas fa-user-plus" style="font-size:2em;color:var(--primary);margin-bottom:12px;display:block"></i>
+            <h4 style="font-size:.95em;font-weight:700;color:var(--primary)">Agregar Usuario</h4>
+            <p style="font-size:.82em;color:var(--text-muted);margin-top:4px">Registrar nuevo usuario en el sistema</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/admin-helper.js"></script>
+<script>
+  const user = protegerAdmin();
+  inyectarHeaderAdmin(user);
+
+  async function cargarDashboard() {
+    try {
+      const [equipos, prestamos, usuarios] = await Promise.all([
+        fetch(`${API_URL}/api/inventario`,  { headers: authHeaders() }).then(r => r.json()),
+        fetch(`${API_URL}/api/prestamos`,   { headers: authHeaders() }).then(r => r.json()),
+        fetch(`${API_URL}/api/usuarios`,    { headers: authHeaders() }).then(r => r.json()),
+      ]);
+
+      const activos   = Array.isArray(prestamos) ? prestamos.filter(p => p.estado_prestamo === 'ACTIVO').length : 0;
+      const disponibles = Array.isArray(equipos) ? equipos.filter(e => e.disponibilidad > 0).length : 0;
+      const totalUsers  = Array.isArray(usuarios) ? usuarios.length : 0;
+      const hoy = new Date().toISOString().split('T')[0];
+      const vencidos = Array.isArray(prestamos) ? prestamos.filter(p =>
+        p.estado_prestamo === 'ACTIVO' && p.fecha_devolucion && p.fecha_devolucion.split('T')[0] < hoy
+      ).length : 0;
+
+      document.getElementById('statActivos').textContent    = activos;
+      document.getElementById('statDisponibles').textContent = disponibles;
+      document.getElementById('statUsuarios').textContent   = totalUsers;
+      document.getElementById('statVencidos').textContent   = vencidos;
+
+      const recientes = Array.isArray(prestamos) ? prestamos.slice(0, 5) : [];
+      document.getElementById('tbodyRecientes').innerHTML = recientes.length
+        ? recientes.map(p => `
+          <tr>
+            <td>${p.id_prestamo}</td>
+            <td>${p.usuario || 'N/A'}</td>
+            <td>${p.nombre_equipo || 'N/A'}</td>
+            <td>${fmtFecha(p.fecha_prestamo)}</td>
+            <td>${fmtFecha(p.fecha_devolucion)}</td>
+            <td><span class="status ${estadoClase(p.estado_prestamo)}">${p.estado_prestamo || 'N/A'}</span></td>
+            <td class="td-actions">
+              <a href="editar_prestamo.html?id=${p.id_prestamo}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
+              <button class="btn btn-danger btn-sm" onclick="eliminarPrestamo(${p.id_prestamo})"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>`)
+          .join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:20px;color:#888">No hay préstamos registrados.</td></tr>';
+
+    } catch(e) {
+      console.error('Error cargando dashboard:', e);
+      document.getElementById('statActivos').textContent    = 'Error';
+      document.getElementById('statDisponibles').textContent = 'Error';
+      document.getElementById('statUsuarios').textContent   = 'Error';
+      document.getElementById('statVencidos').textContent   = 'Error';
+      document.getElementById('tbodyRecientes').innerHTML =
+        '<tr><td colspan="7" style="text-align:center;padding:20px;color:#c62828"><i class="fas fa-exclamation-circle" style="margin-right:8px"></i>No se pudo conectar con el servidor. Verifica que la API esté activa.</td></tr>';
+    }
+  }
+
+  async function eliminarPrestamo(id) {
+    const conf = await Swal.fire({
+      title: '¿Eliminar préstamo?',
+      text: `Se eliminará el préstamo #${id}. Esta acción no se puede deshacer.`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#c62828', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+    const res = await fetch(`${API_URL}/api/prestamos/${id}`, {
+      method: 'DELETE', headers: authHeaders()
+    }).then(r => r.json());
+    showToast(res.message || res.error, res.message ? 'success' : 'error');
+    if (res.message) cargarDashboard();
+  }
+
+  cargarDashboard();
+</script>
+<footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
+        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
+        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
+        <p>Teléfono: 789 896 2083</p>
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
+          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        </button>
+      </div>
+      <div class="footer-section">
+        <h4>Panel Admin</h4>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="inventario.html">Inventario</a></li>
+          <li><a href="prestamos.html">Préstamos</a></li>
+          <li><a href="usuarios.html">Usuarios</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
+          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
+          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
+    </div>
+  </footer>
+<script src="../../js/mapa-uthh.js"></script>
+</body>
+</html>
