@@ -6,6 +6,17 @@
   <title>Usuarios – Panel Administrador</title>
   <link rel="stylesheet" href="../../css/admin-style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  .pag-btn {
+    min-width:36px; height:36px; border:1px solid #dde3f0; border-radius:8px;
+    background:#fff; color:#1a237e; font-weight:600; cursor:pointer;
+    font-size:.85em; transition:all .15s; padding:0 10px;
+  }
+  .pag-btn:hover:not(:disabled) { background:#eef1fb; border-color:#1a237e; }
+  .pag-btn.active { background:#1a237e; color:#fff; border-color:#1a237e; }
+  .pag-btn:disabled { opacity:.4; cursor:default; }
+  .pag-info { font-size:.82em; color:#888; margin:0 4px; }
+</style>
 </head>
 <body>
 <div id="admin-header-placeholder"></div>
@@ -41,6 +52,7 @@
         <table id="tablaUsuarios">
           <thead>
             <tr>
+              <th style="width:64px;text-align:center">Perfil</th>
               <th>Matrícula</th>
               <th>Nombre</th>
               <th>Apellidos</th>
@@ -50,10 +62,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td colspan="6" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:#888">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
+      <div id="paginacionUsr" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap"></div>
     </div>
   </div>
 </main>
@@ -63,36 +76,51 @@
   const user = protegerAdmin();
   inyectarHeaderAdmin(user);
 
-  let _todosUsuarios = [];
+  let _todosUsuarios  = [];
+  let _filtradosUsr   = [];
+  let _paginaUsr      = 1;
+  const POR_PAGINA    = 10;
 
   async function cargarUsuarios() {
     try {
       const usuarios = await fetch(`${API_URL}/api/usuarios`, { headers: authHeaders() }).then(r => r.json());
       _todosUsuarios = Array.isArray(usuarios) ? usuarios : [];
-      renderTabla(_todosUsuarios);
+      _filtradosUsr  = _todosUsuarios;
+      renderTabla();
 
       document.getElementById('searchUser').addEventListener('input', function() {
         const q = this.value.toLowerCase().trim();
-        if (!q) { renderTabla(_todosUsuarios); return; }
-        const filtrados = _todosUsuarios.filter(u =>
+        _filtradosUsr = !q ? _todosUsuarios : _todosUsuarios.filter(u =>
           (u.nombre || '').toLowerCase().includes(q) ||
           (u.apellido_p || '').toLowerCase().includes(q) ||
           (u.apellido_m || '').toLowerCase().includes(q) ||
           (u.Matricula || '').toLowerCase().includes(q) ||
           (u.correo || '').toLowerCase().includes(q)
         );
-        renderTabla(filtrados);
+        _paginaUsr = 1;
+        renderTabla();
       });
     } catch(e) { console.error(e); }
   }
 
-  function renderTabla(lista) {
+  function renderTabla() {
+    const total    = _filtradosUsr.length;
+    const totalPag = Math.ceil(total / POR_PAGINA) || 1;
+    if (_paginaUsr > totalPag) _paginaUsr = totalPag;
+    const inicio   = (_paginaUsr - 1) * POR_PAGINA;
+    const pagina   = _filtradosUsr.slice(inicio, inicio + POR_PAGINA);
+
     const tbody = document.querySelector('#tablaUsuarios tbody');
-    tbody.innerHTML = lista.length
-      ? lista.map(u => {
+    tbody.innerHTML = pagina.length
+      ? pagina.map(u => {
           const apellidos = [(u.apellido_p || ''), (u.apellido_m || '')].filter(Boolean).join(' ');
           const nombreSeg = (u.nombre || '').replace(/'/g, "\\'");
           return `<tr>
+            <td style="text-align:center">
+              <img src="${u.imagen_url || '../../img/default_user.png'}"
+                   alt="${u.nombre}"
+                   style="width:40px;height:40px;object-fit:cover;border-radius:50%;border:2px solid #e0e0e0;">
+            </td>
             <td>${u.Matricula || '—'}</td>
             <td>${u.nombre || '—'}</td>
             <td>${apellidos || '—'}</td>
@@ -105,7 +133,31 @@
             </td>
           </tr>`;
         }).join('')
-      : '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888">No se encontraron usuarios.</td></tr>';
+      : '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888">No se encontraron usuarios.</td></tr>';
+
+    renderPaginacion('paginacionUsr', total, totalPag, _paginaUsr, (p) => { _paginaUsr = p; renderTabla(); });
+  }
+
+  function renderPaginacion(containerId, total, totalPag, paginaActual, onCambio) {
+    const cont = document.getElementById(containerId);
+    if (!cont) return;
+    if (totalPag <= 1) { cont.innerHTML = ''; return; }
+
+    let html = '';
+    html += `<button class="pag-btn" ${paginaActual===1?'disabled':''} onclick="(${onCambio.toString()})(${paginaActual-1})">&#8249;</button>`;
+
+    const rango = 2;
+    for (let i = 1; i <= totalPag; i++) {
+      if (i === 1 || i === totalPag || (i >= paginaActual - rango && i <= paginaActual + rango)) {
+        html += `<button class="pag-btn ${i===paginaActual?'active':''}" onclick="(${onCambio.toString()})(${i})">${i}</button>`;
+      } else if (i === paginaActual - rango - 1 || i === paginaActual + rango + 1) {
+        html += `<span class="pag-info">…</span>`;
+      }
+    }
+
+    html += `<button class="pag-btn" ${paginaActual===totalPag?'disabled':''} onclick="(${onCambio.toString()})(${paginaActual+1})">&#8250;</button>`;
+    html += `<span class="pag-info">${total} registros</span>`;
+    cont.innerHTML = html;
   }
 
   async function eliminarUsuario(id, nombre) {

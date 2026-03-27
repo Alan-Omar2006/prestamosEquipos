@@ -360,11 +360,16 @@ async function generarReportePDF() {
       background: #f7f7f7;
     }
 
+    /* Espacio para que el contenido no se encime con el pie fijo */
+    body { padding-bottom: 90px; }
+
     .firmas {
+      position: fixed;
+      bottom: 30px;
+      left: 36px;
+      right: 36px;
       display: flex;
       justify-content: space-around;
-      margin-top: 40px;
-      margin-bottom: 10px;
     }
     .firma {
       text-align: center;
@@ -378,10 +383,14 @@ async function generarReportePDF() {
     .firma .cargo  { font-size: 9px; color: #555; }
 
     .pie {
-      border-top: 1px solid #999;
-      padding-top: 5px;
-      font-size: 8.5px;
-      color: #666;
+      position: fixed;
+      bottom: 10px;
+      left: 36px;
+      right: 36px;
+      border-top: 1px solid #bbb;
+      padding-top: 4px;
+      font-size: 8px;
+      color: #888;
       display: flex;
       justify-content: space-between;
     }
@@ -478,41 +487,6 @@ async function generarReportePDF() {
     <span>Este documento es generado automáticamente y tiene validez informativa.</span>
   </div>
 
-<footer>
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3>Universidad Tecnológica de la Huasteca Hidalguense</h3>
-        <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
-        <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
-        <p>Teléfono: 789 896 2083</p>
-        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
-          <i class="fas fa-map-marker-alt"></i> Ver ubicación
-        </button>
-      </div>
-      <div class="footer-section">
-        <h4>Panel Admin</h4>
-        <ul>
-          <li><a href="dashboard.html">Dashboard</a></li>
-          <li><a href="inventario.html">Inventario</a></li>
-          <li><a href="prestamos.html">Préstamos</a></li>
-          <li><a href="usuarios.html">Usuarios</a></li>
-          <li><a href="noticias.html">Noticias</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Navegación</h4>
-        <ul>
-          <li><a href="../../pages/quienes_somos.html">Acerca de Nosotros</a></li>
-          <li><a href="../../pages/mapa.html">Mapa de Navegación</a></li>
-          <li><a href="../../pages/catalogo.html">Catálogo de Equipos</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      © 2025 Gestión de Préstamos de Equipos y Accesorios de Cómputo · UTHH. Todos los derechos reservados.
-    </div>
-  </footer>
-<script src="../../js/mapa-uthh.js"></script>
 </body>
 </html>`;
 
@@ -554,6 +528,7 @@ async function generarReportePDF() {
   }
 }
 </script>
+
 <footer>
     <div class="footer-content">
       <div class="footer-section">

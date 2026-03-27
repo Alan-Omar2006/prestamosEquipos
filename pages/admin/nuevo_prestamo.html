@@ -11,6 +11,41 @@
     .field-error{color:#c62828;font-size:.82em;margin-top:4px;display:none}
     .field-error.show{display:block}
     .form-control.error{border-color:#c62828}
+
+    .autocomplete-wrap { position:relative; }
+    .autocomplete-list {
+      position:absolute; top:calc(100% + 4px); left:0; right:0;
+      background:#fff; border:1px solid #dde3f0; border-radius:10px;
+      box-shadow:0 8px 24px rgba(0,0,0,.13); z-index:999;
+      max-height:220px; overflow-y:auto; display:none;
+    }
+    .autocomplete-list.open { display:block; }
+    .ac-item {
+      padding:10px 14px; cursor:pointer; font-size:.9em;
+      border-bottom:1px solid #f0f2f8; transition:background .15s;
+    }
+    .ac-item:last-child { border-bottom:none; }
+    .ac-item:hover, .ac-item.kb-focus { background:#eef1fb; }
+    .ac-main { font-weight:600; color:#1a237e; }
+    .ac-sub  { font-size:.8em; color:#888; margin-top:2px; }
+    .ac-disp {
+      display:inline-block; font-size:.72em; padding:1px 7px;
+      border-radius:20px; margin-left:6px; font-weight:700;
+      background:#e8f5e9; color:#2e7d32;
+    }
+
+    .tipo-row { display:flex; gap:10px; margin-bottom:2px; }
+    .tipo-btn {
+      flex:1; padding:10px 0; border:2px solid #dde3f0; border-radius:10px;
+      background:#f8f9fc; color:#555; font-weight:600; cursor:pointer;
+      transition:all .2s; font-size:.9em; display:flex; align-items:center;
+      justify-content:center; gap:7px;
+    }
+    .tipo-btn:hover { border-color:#1a237e; color:#1a237e; background:#eef1fb; }
+    .tipo-btn.active { border-color:#1a237e; background:#1a237e; color:#fff; }
+
+    .equipo-group { transition:opacity .2s; }
+    .equipo-group.bloqueado { opacity:.45; pointer-events:none; }
   </style>
 </head>
 <body>
@@ -39,18 +74,45 @@
       </div>
       <div style="max-width:640px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
 
+        <!-- USUARIO -->
         <div class="form-group">
           <label class="form-label">Usuario <span style="color:#c62828">*</span></label>
-          <select class="form-control" id="selUsuario"><option value="">Seleccionar usuario...</option></select>
-          <p class="field-error" id="error-usuario">Debe seleccionar un usuario</p>
+          <div class="autocomplete-wrap">
+            <input type="text" class="form-control" id="inputUsuario"
+              placeholder="Buscar por nombre o matrícula..." autocomplete="off">
+            <div class="autocomplete-list" id="listUsuario"></div>
+          </div>
+          <input type="hidden" id="hidUsuario">
+          <p class="field-error" id="error-usuario">Debe seleccionar un usuario de la lista</p>
         </div>
 
+        <!-- TIPO -->
         <div class="form-group">
-          <label class="form-label">Equipo / Accesorio <span style="color:#c62828">*</span></label>
-          <select class="form-control" id="selEquipo"><option value="">Seleccionar equipo...</option></select>
-          <p class="field-error" id="error-equipo">Debe seleccionar un equipo</p>
+          <label class="form-label">Tipo de item <span style="color:#c62828">*</span></label>
+          <div class="tipo-row">
+            <button type="button" class="tipo-btn" id="btnTipoEquipo" onclick="seleccionarTipo('equipo')">
+              <i class="fas fa-laptop"></i> Equipo de cómputo
+            </button>
+            <button type="button" class="tipo-btn" id="btnTipoAccesorio" onclick="seleccionarTipo('accesorio')">
+              <i class="fas fa-plug"></i> Accesorio
+            </button>
+          </div>
+          <p class="field-error" id="error-tipo">Debe seleccionar un tipo</p>
         </div>
 
+        <!-- EQUIPO / ACCESORIO -->
+        <div class="form-group equipo-group bloqueado" id="grupoEquipo">
+          <label class="form-label" id="labelEquipo">Equipo / Accesorio <span style="color:#c62828">*</span></label>
+          <div class="autocomplete-wrap">
+            <input type="text" class="form-control" id="inputEquipo"
+              placeholder="Selecciona primero el tipo..." autocomplete="off">
+            <div class="autocomplete-list" id="listEquipo"></div>
+          </div>
+          <input type="hidden" id="hidEquipo">
+          <p class="field-error" id="error-equipo">Debe seleccionar un equipo o accesorio de la lista</p>
+        </div>
+
+        <!-- FECHAS -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div class="form-group">
             <label class="form-label">Fecha de préstamo <span style="color:#c62828">*</span></label>
@@ -59,19 +121,25 @@
           <div class="form-group">
             <label class="form-label">Fecha de devolución <span style="color:#c62828">*</span></label>
             <input type="date" class="form-control" id="fFin">
-            <p class="field-error" id="error-devolucion">La fecha de devolución debe ser posterior a la fecha de préstamo</p>
+            <p class="field-error" id="error-devolucion">Debe ser posterior a la fecha de préstamo</p>
           </div>
         </div>
 
+        <!-- OBSERVACIONES -->
         <div class="form-group">
           <label class="form-label">Observaciones</label>
-          <textarea class="form-control" id="obs" rows="3" placeholder="Observaciones adicionales sobre el préstamo (opcional)..."></textarea>
+          <textarea class="form-control" id="obs" rows="3"
+            placeholder="Observaciones adicionales (opcional)..."></textarea>
         </div>
 
         <p id="errorPrestamo" style="color:#c62828;font-size:.85em;min-height:18px"></p>
         <div style="display:flex;gap:12px;margin-top:4px">
-          <button class="btn btn-outline" onclick="confirmarCancelar()"><i class="fas fa-times"></i> Cancelar</button>
-          <button class="btn btn-primary" id="btnGuardar" onclick="guardarPrestamo()"><i class="fas fa-save"></i> Registrar préstamo</button>
+          <button class="btn btn-outline" onclick="confirmarCancelar()">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardarPrestamo()">
+            <i class="fas fa-save"></i> Registrar préstamo
+          </button>
         </div>
       </div>
     </div>
@@ -82,85 +150,240 @@
   const user = protegerAdmin();
   inyectarHeaderAdmin(user);
 
-  const hoy = new Date();
-  hoy.setHours(0,0,0,0);
+  // Fechas
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
   const hoyStr = hoy.toISOString().split('T')[0];
   document.getElementById('fInicio').value = hoyStr;
-
   const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
   document.getElementById('fFin').min = manana.toISOString().split('T')[0];
 
-  document.querySelectorAll('select,input,textarea').forEach(el=>{
-    el.addEventListener('change',()=>el.classList.remove('error'));
-    el.addEventListener('input',()=>el.classList.remove('error'));
-  });
+  // ─── Datos cargados ───────────────────────────────────────────
+  let todosUsuarios = [];
+  let todosEquipos  = [];
+  let tipoSeleccionado = null; // 'equipo' | 'accesorio'
 
-  async function cargarSelectores() {
+  async function cargarDatos() {
     try {
       const [usuarios, equipos] = await Promise.all([
-        fetch(`${API_URL}/api/usuarios`,{headers:authHeaders()}).then(r=>r.json()),
-        fetch(`${API_URL}/api/inventario/disponibles`).then(r=>r.json()),
+        fetch(`${API_URL}/api/usuarios`, { headers: authHeaders() }).then(r => r.json()),
+        fetch(`${API_URL}/api/inventario/disponibles`).then(r => r.json()),
       ]);
-      const selU = document.getElementById('selUsuario');
-      const selE = document.getElementById('selEquipo');
-      if(Array.isArray(usuarios))
-        usuarios.forEach(u=>selU.innerHTML+=`<option value="${u.id_usuario}">${u.nombre} ${u.apellido_p} (${u.Matricula||'—'})</option>`);
-      if(Array.isArray(equipos))
-        equipos.filter(e=>e.disponibilidad>0).forEach(e=>selE.innerHTML+=`<option value="${e.id_equipo}" data-disp="${e.disponibilidad}">${e.nombre_equipo} — ${e.disponibilidad} disp.</option>`);
+      if (Array.isArray(usuarios)) todosUsuarios = usuarios;
+      if (Array.isArray(equipos))  todosEquipos  = equipos.filter(e => e.disponibilidad > 0);
     } catch(e) { console.error(e); }
   }
 
-  async function guardarPrestamo() {
-    const id_usuario      = document.getElementById('selUsuario').value;
-    const id_equipo       = document.getElementById('selEquipo').value;
-    const fecha_prestamo  = document.getElementById('fInicio').value;
-    const fecha_devolucion= document.getElementById('fFin').value;
-    const observaciones   = document.getElementById('obs').value.trim();
+  // ─── Tipo selector ────────────────────────────────────────────
+  function seleccionarTipo(tipo) {
+    tipoSeleccionado = tipo;
+    document.getElementById('btnTipoEquipo').classList.toggle('active',    tipo === 'equipo');
+    document.getElementById('btnTipoAccesorio').classList.toggle('active', tipo === 'accesorio');
+    document.getElementById('error-tipo').classList.remove('show');
 
-    document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('show'));
-    document.querySelectorAll('.form-control').forEach(e=>e.classList.remove('error'));
-    document.getElementById('errorPrestamo').textContent='';
+    // Desbloquear campo equipo
+    const grupo = document.getElementById('grupoEquipo');
+    grupo.classList.remove('bloqueado');
 
-    let valid=true;
-    if(!id_usuario){document.getElementById('selUsuario').classList.add('error');document.getElementById('error-usuario').classList.add('show');valid=false;}
-    if(!id_equipo) {document.getElementById('selEquipo').classList.add('error'); document.getElementById('error-equipo').classList.add('show'); valid=false;}
-    if(!fecha_devolucion||new Date(fecha_devolucion)<=new Date(fecha_prestamo)){
-      document.getElementById('fFin').classList.add('error');
-      document.getElementById('error-devolucion').classList.add('show');valid=false;
+    // Limpiar selección anterior
+    document.getElementById('inputEquipo').value = '';
+    document.getElementById('hidEquipo').value   = '';
+    document.getElementById('inputEquipo').placeholder =
+      tipo === 'equipo' ? 'Buscar equipo de cómputo...' : 'Buscar accesorio...';
+    document.getElementById('labelEquipo').innerHTML =
+      (tipo === 'equipo' ? 'Equipo de cómputo' : 'Accesorio') +
+      ' <span style="color:#c62828">*</span>';
+  }
+
+  // ─── Autocomplete genérico ────────────────────────────────────
+  function crearAutocomplete({ inputId, listId, getData, renderItem, onSelect }) {
+    const input = document.getElementById(inputId);
+    const list  = document.getElementById(listId);
+    let kbIdx = -1;
+
+    function filtrar(q) {
+      const items = getData(q);
+      list.innerHTML = '';
+      kbIdx = -1;
+      if (!items.length) { list.classList.remove('open'); return; }
+      items.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'ac-item';
+        div.innerHTML = renderItem(item);
+        div.addEventListener('mousedown', e => { e.preventDefault(); onSelect(item, input, list); });
+        list.appendChild(div);
+      });
+      list.classList.add('open');
     }
 
-    if(!valid){document.querySelector('.error')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+    input.addEventListener('input', () => filtrar(input.value.trim()));
+    input.addEventListener('focus', () => { if(input.value.trim()) filtrar(input.value.trim()); });
+    input.addEventListener('blur',  () => setTimeout(() => list.classList.remove('open'), 150));
 
-    const conf=await Swal.fire({
-      title:'¿Registrar préstamo?',
-      text:`Se registrará el préstamo. Fecha de devolución: ${fecha_devolucion}.`,
-      icon:'question',showCancelButton:true,
-      confirmButtonColor:'#1a237e',cancelButtonColor:'#757575',
-      confirmButtonText:'Sí, registrar',cancelButtonText:'Cancelar'
+    input.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('.ac-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if(kbIdx >= 0) items[kbIdx].classList.remove('kb-focus');
+        kbIdx = Math.min(kbIdx + 1, items.length - 1);
+        items[kbIdx].classList.add('kb-focus');
+        items[kbIdx].scrollIntoView({ block:'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if(kbIdx >= 0) items[kbIdx].classList.remove('kb-focus');
+        kbIdx = Math.max(kbIdx - 1, 0);
+        items[kbIdx].classList.add('kb-focus');
+        items[kbIdx].scrollIntoView({ block:'nearest' });
+      } else if (e.key === 'Enter' && kbIdx >= 0) {
+        e.preventDefault();
+        items[kbIdx].dispatchEvent(new Event('mousedown'));
+      } else if (e.key === 'Escape') {
+        list.classList.remove('open');
+      }
     });
-    if(!conf.isConfirmed)return;
-
-    const btn=document.getElementById('btnGuardar');
-    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Registrando...';
-
-    try{
-      const res=await fetch(`${API_URL}/api/prestamos`,{method:'POST',headers:authHeaders(true),
-        body:JSON.stringify({id_usuario: parseInt(id_usuario), id_equipo: parseInt(id_equipo), fecha_prestamo, fecha_devolucion, observaciones})
-      }).then(r=>r.json());
-      if(res.message&&!res.error){
-        await Swal.fire({icon:'success',title:'¡Registrado!',text:'Préstamo registrado correctamente.',confirmButtonColor:'#1a237e'});
-        window.location.href='prestamos.html';
-      }else{document.getElementById('errorPrestamo').textContent=res.error||res.message||'Error al registrar.';}
-    }catch(e){document.getElementById('errorPrestamo').textContent='Error de conexión.';}
-    finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Registrar préstamo';}
   }
 
-  async function confirmarCancelar(){
-    const conf=await Swal.fire({title:'¿Cancelar?',text:'No se registrará el préstamo.',icon:'warning',showCancelButton:true,confirmButtonColor:'#c62828',cancelButtonColor:'#757575',confirmButtonText:'Sí, salir',cancelButtonText:'Seguir editando'});
-    if(conf.isConfirmed)window.location.href='prestamos.html';
+  // ─── Autocomplete USUARIO ─────────────────────────────────────
+  crearAutocomplete({
+    inputId: 'inputUsuario',
+    listId:  'listUsuario',
+    getData: q => {
+      if (!q) return todosUsuarios.slice(0, 8);
+      const lq = q.toLowerCase();
+      return todosUsuarios.filter(u =>
+        `${u.nombre} ${u.apellido_p} ${u.apellido_m || ''}`.toLowerCase().includes(lq) ||
+        (u.Matricula || '').toLowerCase().includes(lq)
+      ).slice(0, 10);
+    },
+    renderItem: u => `
+      <div class="ac-main">${u.nombre} ${u.apellido_p} ${u.apellido_m || ''}</div>
+      <div class="ac-sub">
+        ${u.tipo_usuario}
+        ${u.Matricula ? '· Matrícula: ' + u.Matricula : ''}
+        · ${u.correo}
+      </div>`,
+    onSelect: (u, input, list) => {
+      input.value = `${u.nombre} ${u.apellido_p}${u.Matricula ? ' (' + u.Matricula + ')' : ''}`;
+      document.getElementById('hidUsuario').value = u.id_usuario;
+      document.getElementById('error-usuario').classList.remove('show');
+      input.classList.remove('error');
+      list.classList.remove('open');
+    }
+  });
+
+  // ─── Autocomplete EQUIPO ──────────────────────────────────────
+  crearAutocomplete({
+    inputId: 'inputEquipo',
+    listId:  'listEquipo',
+    getData: q => {
+      if (!tipoSeleccionado) return [];
+      // id_tipo 2 = ACCESORIO, id_tipo 3 = EQUIPO DE COMPUTO
+      const idTipoBuscado = tipoSeleccionado === 'accesorio' ? 2 : 3;
+      const filtrados = todosEquipos.filter(e => e.id_tipo === idTipoBuscado);
+      if (!q) return filtrados.slice(0, 8);
+      const lq = q.toLowerCase();
+      return filtrados.filter(e =>
+        e.nombre_equipo.toLowerCase().includes(lq) ||
+        (e.modelo || '').toLowerCase().includes(lq)
+      ).slice(0, 10);
+    },
+    renderItem: e => `
+      <div class="ac-main">
+        ${e.nombre_equipo}
+        <span class="ac-disp">${e.disponibilidad} disp.</span>
+      </div>
+      <div class="ac-sub">${e.modelo || ''} ${e.nombre_Tipo ? '· ' + e.nombre_Tipo : ''}</div>`,
+    onSelect: (e, input, list) => {
+      input.value = `${e.nombre_equipo}${e.modelo ? ' — ' + e.modelo : ''}`;
+      document.getElementById('hidEquipo').value = e.id_equipo;
+      document.getElementById('error-equipo').classList.remove('show');
+      input.classList.remove('error');
+      list.classList.remove('open');
+    }
+  });
+
+  // ─── Guardar préstamo ─────────────────────────────────────────
+  async function guardarPrestamo() {
+    const id_usuario       = document.getElementById('hidUsuario').value;
+    const id_equipo        = document.getElementById('hidEquipo').value;
+    const fecha_prestamo   = document.getElementById('fInicio').value;
+    const fecha_devolucion = document.getElementById('fFin').value;
+    const observaciones    = document.getElementById('obs').value.trim();
+
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
+    document.getElementById('errorPrestamo').textContent = '';
+
+    let valid = true;
+    if (!id_usuario) {
+      document.getElementById('inputUsuario').classList.add('error');
+      document.getElementById('error-usuario').classList.add('show');
+      valid = false;
+    }
+    if (!tipoSeleccionado) {
+      document.getElementById('error-tipo').classList.add('show');
+      valid = false;
+    }
+    if (!id_equipo) {
+      document.getElementById('inputEquipo').classList.add('error');
+      document.getElementById('error-equipo').classList.add('show');
+      valid = false;
+    }
+    if (!fecha_devolucion || new Date(fecha_devolucion) <= new Date(fecha_prestamo)) {
+      document.getElementById('fFin').classList.add('error');
+      document.getElementById('error-devolucion').classList.add('show');
+      valid = false;
+    }
+    if (!valid) { document.querySelector('.error')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+
+    const conf = await Swal.fire({
+      title: '¿Registrar préstamo?',
+      text: `Fecha de devolución: ${fecha_devolucion}.`,
+      icon: 'question', showCancelButton: true,
+      confirmButtonColor: '#1a237e', cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, registrar', cancelButtonText: 'Cancelar'
+    });
+    if (!conf.isConfirmed) return;
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/prestamos`, {
+        method: 'POST',
+        headers: authHeaders(true),
+        body: JSON.stringify({
+          id_usuario: parseInt(id_usuario),
+          id_equipo:  parseInt(id_equipo),
+          fecha_prestamo, fecha_devolucion, observaciones
+        })
+      }).then(r => r.json());
+
+      if (res.message && !res.error) {
+        await Swal.fire({ icon:'success', title:'¡Registrado!', text:'Préstamo registrado correctamente.', confirmButtonColor:'#1a237e' });
+        window.location.href = 'prestamos.html';
+      } else {
+        document.getElementById('errorPrestamo').textContent = res.error || res.message || 'Error al registrar.';
+      }
+    } catch(e) {
+      document.getElementById('errorPrestamo').textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Registrar préstamo';
+    }
   }
 
-  cargarSelectores();
+  async function confirmarCancelar() {
+    const conf = await Swal.fire({
+      title:'¿Cancelar?', text:'No se registrará el préstamo.', icon:'warning',
+      showCancelButton:true, confirmButtonColor:'#c62828', cancelButtonColor:'#757575',
+      confirmButtonText:'Sí, salir', cancelButtonText:'Seguir editando'
+    });
+    if (conf.isConfirmed) window.location.href = 'prestamos.html';
+  }
+
+  cargarDatos();
 </script>
 <footer>
     <div class="footer-content">

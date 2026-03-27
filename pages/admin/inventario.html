@@ -6,6 +6,18 @@
   <title>Inventario – Panel Administrador</title>
   <link rel="stylesheet" href="../../css/admin-style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  /* Paginación */
+  .pag-btn {
+    min-width:36px; height:36px; border:1px solid #dde3f0; border-radius:8px;
+    background:#fff; color:#1a237e; font-weight:600; cursor:pointer;
+    font-size:.85em; transition:all .15s; padding:0 10px;
+  }
+  .pag-btn:hover:not(:disabled) { background:#eef1fb; border-color:#1a237e; }
+  .pag-btn.active { background:#1a237e; color:#fff; border-color:#1a237e; }
+  .pag-btn:disabled { opacity:.4; cursor:default; }
+  .pag-info { font-size:.82em; color:#888; margin:0 4px; }
+</style>
 </head>
 <body>
 
@@ -58,7 +70,7 @@
         <table id="tablaInventario">
           <thead>
             <tr>
-              <th>Imagen</th>
+              <th style="width:64px;text-align:center">Imagen</th>
               <th>Equipo</th>
               <th>Modelo</th>
               <th>Marca</th>
@@ -72,6 +84,7 @@
           </tbody>
         </table>
       </div>
+      <div id="paginacionInv" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap"></div>
     </div>
   </div>
 </main>
@@ -83,6 +96,9 @@
   inyectarHeaderAdmin(user);
 
   let _equiposCache = [];
+  let _filtradosInv  = [];
+  let _paginaInv     = 1;
+  const POR_PAGINA   = 10;
 
   async function cargarInventario() {
     try {
@@ -97,7 +113,7 @@
     const tipo = (document.getElementById('filtroTipo').value || '').toUpperCase();
     const disp = document.getElementById('filtroDisp').value;
 
-    const lista = _equiposCache.filter(e => {
+    _filtradosInv = _equiposCache.filter(e => {
       const texto = `${e.nombre_equipo} ${e.marca||''} ${e.modelo||''} ${e.tipo||''}`.toLowerCase();
       if (q && !texto.includes(q)) return false;
       if (tipo && (e.tipo||'').toUpperCase() !== tipo) return false;
@@ -106,11 +122,26 @@
       return true;
     });
 
+    _paginaInv = 1;
+    renderInventario();
+  }
+
+  function renderInventario() {
+    const total   = _filtradosInv.length;
+    const totalPag = Math.ceil(total / POR_PAGINA) || 1;
+    if (_paginaInv > totalPag) _paginaInv = totalPag;
+    const inicio  = (_paginaInv - 1) * POR_PAGINA;
+    const pagina  = _filtradosInv.slice(inicio, inicio + POR_PAGINA);
+
     const tbody = document.querySelector('#tablaInventario tbody');
-    tbody.innerHTML = lista.length
-      ? lista.map(e => `
+    tbody.innerHTML = pagina.length
+      ? pagina.map(e => `
           <tr>
-            <td>${e.id_equipo}</td>
+            <td style="text-align:center">
+              <img src="${e.imagen_url || '../../img/picture.png'}"
+                   alt="${e.nombre_equipo}"
+                   style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e0e0e0;">
+            </td>
             <td style="font-weight:600">${e.nombre_equipo}</td>
             <td>${e.marca || '—'} / ${e.modelo || '—'}</td>
             <td>${e.tipo || '—'}</td>
@@ -127,6 +158,8 @@
           </tr>`)
         .join('')
       : '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888">No se encontraron equipos.</td></tr>';
+
+    renderPaginacion('paginacionInv', total, totalPag, _paginaInv, (p) => { _paginaInv = p; renderInventario(); });
   }
 
   async function confirmarEliminar(id, nombre) {
@@ -145,6 +178,29 @@
       showToast(res.message || res.error, res.message ? 'success' : 'error');
       if (res.message) cargarInventario();
     } catch(e) { showToast('Error de conexión.', 'error'); }
+  }
+
+
+  function renderPaginacion(containerId, total, totalPag, paginaActual, onCambio) {
+    const cont = document.getElementById(containerId);
+    if (!cont) return;
+    if (totalPag <= 1) { cont.innerHTML = ''; return; }
+
+    let html = '';
+    html += `<button class="pag-btn" ${paginaActual===1?'disabled':''} onclick="(${onCambio.toString()})(${paginaActual-1})">&#8249;</button>`;
+
+    const rango = 2;
+    for (let i = 1; i <= totalPag; i++) {
+      if (i === 1 || i === totalPag || (i >= paginaActual - rango && i <= paginaActual + rango)) {
+        html += `<button class="pag-btn ${i===paginaActual?'active':''}" onclick="(${onCambio.toString()})(${i})">${i}</button>`;
+      } else if (i === paginaActual - rango - 1 || i === paginaActual + rango + 1) {
+        html += `<span class="pag-info">…</span>`;
+      }
+    }
+
+    html += `<button class="pag-btn" ${paginaActual===totalPag?'disabled':''} onclick="(${onCambio.toString()})(${paginaActual+1})">&#8250;</button>`;
+    html += `<span class="pag-info">${total} registros</span>`;
+    cont.innerHTML = html;
   }
 
   cargarInventario();
