@@ -1,7 +1,5 @@
 
-// Cambiar URL a la dirección del servidor en producción antes de desplegar
-// Ejemplo producción: const API_URL = 'https://tu-api.vercel.app';
-const API_URL = 'https://api-prestamos.vercel.app';
+const API_URL = 'https://api-prestamos-mfr4.onrender.com';
 
 function protegerAdmin() {
   const token    = sessionStorage.getItem('token');

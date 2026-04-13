@@ -15,6 +15,19 @@
     .field-error { color:#c62828;font-size:.82em;margin-top:4px;display:none }
     .field-error.show { display:block }
     .form-control.error { border-color:#c62828;border-width:2px }
+    .pass-input-wrap{position:relative}
+    .pass-input-wrap .toggle-vis{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;padding:0;font-size:14px}
+    .pass-input-wrap .form-control{padding-right:34px}
+    .strength-bar{height:3px;border-radius:2px;background:#e0e0e0;margin:5px 0 8px;overflow:hidden}
+    .strength-bar-fill{height:100%;border-radius:2px;width:0%;transition:width .3s,background .3s}
+    .req-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+    .req-list li{display:flex;align-items:center;gap:7px;font-size:.78em;color:#999;transition:color .2s}
+    .req-list li .dot{width:11px;height:11px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;transition:background .2s,border-color .2s}
+    .req-list li.pass{color:#2e7d32}.req-list li.pass .dot{background:#4caf50;border-color:#4caf50}
+    .req-list li.fail{color:#c62828}.req-list li.fail .dot{background:#ef5350;border-color:#ef5350}
+    .req-list li.optional .dot{border-style:dashed}
+    .req-list li.optional.pass{color:#2e7d32}.req-list li.optional.pass .dot{background:#4caf50;border-color:#4caf50;border-style:solid}
+    .conf-msg-inline{font-size:.78em;min-height:14px;margin:3px 0 0}
   </style>
 </head>
 <body>
@@ -111,13 +124,26 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nueva contraseña <span style="color:#aaa;font-weight:400">(opcional)</span></label>
-          <input type="password" class="form-control" id="pPass" placeholder="Mínimo 6 caracteres" maxlength="255">
-          <p class="field-error" id="error-pass">La contraseña debe tener al menos 6 caracteres</p>
-          <div class="req-pass">⚠️ Mínimo 6 caracteres. Deja vacío para no cambiar.</div>
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="pPass" placeholder="Dejar vacío para no cambiar" maxlength="255" oninput="onAdminPassInput(this.value)">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="toggleAdminVis('pPass',this)"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="strength-bar" id="adminStrengthBar" style="display:none"><div class="strength-bar-fill" id="adminStrengthFill"></div></div>
+          <ul class="req-list" id="adminReqList" style="display:none;margin-top:4px">
+            <li id="areq-len" class=""><span class="dot"></span>Mínimo 8 caracteres</li>
+            <li id="areq-upper" class=""><span class="dot"></span>Al menos una mayúscula</li>
+            <li id="areq-num" class=""><span class="dot"></span>Al menos un número</li>
+            <li id="areq-special" class="optional"><span class="dot"></span>Carácter especial (opcional)</li>
+          </ul>
+          <p class="field-error" id="error-pass">La contraseña no cumple los requisitos</p>
         </div>
         <div class="form-group">
           <label class="form-label">Confirmar contraseña</label>
-          <input type="password" class="form-control" id="pPassConf" placeholder="Repetir contraseña" maxlength="255">
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="pPassConf" placeholder="Repetir contraseña" maxlength="255" oninput="onAdminConfInput()">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="toggleAdminVis('pPassConf',this)"><i class="fas fa-eye"></i></button>
+          </div>
+          <p class="conf-msg-inline" id="admin-conf-msg"></p>
           <p class="field-error" id="error-pass-conf">Las contraseñas no coinciden</p>
         </div>
       </div>
@@ -205,7 +231,7 @@
       valid = false;
     }
 
-    if (pass && pass.length < 6) {
+    if (pass && !PASS_RE.test(pass)) {
       document.getElementById('pPass').classList.add('error');
       document.getElementById('error-pass').classList.add('show');
       valid = false;
@@ -247,6 +273,51 @@
       }
     } catch(e) { errorEl.textContent = 'Error de conexión.'; }
     finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios'; }
+  }
+
+  const PASS_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+  function setAreq(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = cls;
+  }
+
+  function onAdminPassInput(val) {
+    const bar  = document.getElementById('adminStrengthBar');
+    const list = document.getElementById('adminReqList');
+    if (!bar || !list) return;
+    if (val) { bar.style.display='block'; list.style.display='flex'; }
+    else     { bar.style.display='none';  list.style.display='none'; }
+    const checks = { len: val.length>=8, upper:/[A-Z]/.test(val), num:/\d/.test(val), special:/[^A-Za-z0-9]/.test(val) };
+    if (!val) { ['areq-len','areq-upper','areq-num'].forEach(id=>setAreq(id,'')); setAreq('areq-special','optional'); }
+    else {
+      setAreq('areq-len',   checks.len   ?'pass':'fail');
+      setAreq('areq-upper', checks.upper ?'pass':'fail');
+      setAreq('areq-num',   checks.num   ?'pass':'fail');
+      setAreq('areq-special', checks.special?'optional pass':'optional');
+    }
+    const score=[checks.len,checks.upper,checks.num,checks.special].filter(Boolean).length;
+    const fill=document.getElementById('adminStrengthFill');
+    if(fill){ fill.style.width=val?['0%','33%','58%','80%','100%'][score]:'0%'; fill.style.background=val?['transparent','#ef5350','#ff9800','#66bb6a','#2e7d32'][score]:'transparent'; }
+    onAdminConfInput();
+  }
+
+  function onAdminConfInput() {
+    const p=document.getElementById('pPass')?.value||'';
+    const c=document.getElementById('pPassConf')?.value||'';
+    const msg=document.getElementById('admin-conf-msg');
+    if(!msg)return;
+    if(!c){msg.textContent='';return;}
+    if(p===c){msg.style.color='#2e7d32';msg.textContent='✓ Coinciden';}
+    else{msg.style.color='#c62828';msg.textContent='No coinciden';}
+  }
+
+  function toggleAdminVis(id, btn) {
+    const inp=document.getElementById(id);
+    const icon=btn?.querySelector('i');
+    if(!inp)return;
+    if(inp.type==='password'){inp.type='text';icon?.classList.replace('fa-eye','fa-eye-slash');}
+    else{inp.type='password';icon?.classList.replace('fa-eye-slash','fa-eye');}
   }
 
   cargarPerfil();

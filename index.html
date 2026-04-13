@@ -7,30 +7,37 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+    .skip-link:focus { position: fixed; top: 0; left: 0; width: auto; height: auto; padding: 12px 20px; background: #1a237e; color: #fff; font-weight: 700; font-size: 1rem; z-index: 99999; text-decoration: none; border-radius: 0 0 8px 0; }
+  </style>
+  <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&amp;render=explicit" async defer></script>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
   <header>
     <div class="logo">
-      <a href="index.html">
+      <span role="img" aria-label="UTHH Logo">
         <img src="img/logo.png" alt="UTHH Logo" onerror="this.style.display='none'">
-      </a>
+      </span>
     </div>
     <span class="header-title">Gestión de Préstamos de Equipos y Accesorios de Cómputo</span>
     <nav class="navigation">
       <button class="btn-login-popup" id="openLoginBtn">Iniciar sesión</button>
       <div id="userMenuHeader" style="display:none;align-items:center;gap:10px;position:relative">
-        <div style="position:relative;cursor:pointer;display:flex;align-items:center" id="userMenuToggle">
-          <img id="headerUserImg" src="img/default_user.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
-          <span id="headerUserName" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
-          <i class="fas fa-chevron-down" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
-        </div>
+        <button type="button" id="userMenuToggle" aria-haspopup="true" aria-expanded="false" aria-label="Menú de usuario" style="position:relative;cursor:pointer;display:flex;align-items:center;background:none;border:none;padding:0">
+          <img id="headerUserImg" src="img/default_user.png" alt="Foto de perfil" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--c-primary)">
+          <span id="headerUserName" aria-hidden="true" style="font-size:.88em;font-weight:600;color:var(--c-primary);margin-left:8px;vertical-align:middle"></span>
+          <i class="fas fa-chevron-down" aria-hidden="true" style="font-size:.7em;color:var(--c-primary);margin-left:4px;vertical-align:middle"></i>
+        </button>
         <div id="userDropdownMenu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:200px;z-index:1000;overflow:hidden">
           <div id="userDropdownName" style="padding:14px 16px 10px;font-size:.85em;color:#888;border-bottom:1px solid #eef0f8"></div>
           <div id="userPanelLink" style="padding:4px 0"></div>
           <div style="padding:4px 0;border-top:1px solid #eef0f8">
             <button id="headerLogoutBtn" style="width:100%;text-align:left;padding:10px 16px;background:none;border:none;cursor:pointer;font-size:.88em;color:#c62828;font-weight:600">
-              <i class="fas fa-sign-out-alt" style="margin-right:8px"></i>Cerrar sesión
+              <i class="fas fa-sign-out-alt" style="margin-right:8px" aria-hidden="true"></i>Cerrar sesión
             </button>
           </div>
         </div>
@@ -40,41 +47,42 @@
 
   <nav class="mini-menu" id="miniMenu">
     <div class="mini-menu-container">
-      <a href="index.html" class="mini-menu-item active">
-        <i class="fas fa-home"></i><span>Inicio</span>
-      </a>
+      <span class="mini-menu-item active" aria-current="page">
+        <i class="fas fa-home" aria-hidden="true"></i><span>Inicio</span>
+      </span>
       <a href="pages/catalogo.html" class="mini-menu-item">
-        <i class="fas fa-th"></i><span>Catálogo</span>
+        <i class="fas fa-th" aria-hidden="true"></i><span>Catálogo</span>
       </a>
       <a href="pages/quienes_somos.html" class="mini-menu-item">
-        <i class="fas fa-info-circle"></i><span>Quiénes Somos</span>
+        <i class="fas fa-info-circle" aria-hidden="true"></i><span>Quiénes Somos</span>
       </a>
       <a href="pages/mapa.html" class="mini-menu-item">
-        <i class="fas fa-sitemap"></i><span>Mapa de Navegación</span>
+        <i class="fas fa-sitemap" aria-hidden="true"></i><span>Mapa de Navegación</span>
       </a>
     </div>
   </nav>
 
-  <img src="img/accesibilidad1.png" class="accesibilidad-btn" alt="Accesibilidad" title="Accesibilidad"
+  <img src="img/accesibilidad1.png" class="accesibilidad-btn" alt="Opciones de accesibilidad"
        onerror="this.style.display='none'">
 
-  <main class="page-content">
+  <main id="main-content" class="page-content">
+    <h1 class="visually-hidden">Inicio – Gestión de Préstamos UTHH</h1>
 
     <section class="noticias-section">
       <div class="section-heading">
-        <h2><i class="fas fa-newspaper"></i> Últimas Noticias</h2>
+        <h2><i class="fas fa-newspaper" aria-hidden="true"></i> Últimas Noticias</h2>
       </div>
 
       <div class="carousel-wrapper">
-        <button class="carousel-arrow" id="prevNot" aria-label="Anterior">
-          <i class="fas fa-chevron-left"></i>
+        <button class="carousel-arrow" id="prevNot" aria-label="Noticia anterior">
+          <i class="fas fa-chevron-left" aria-hidden="true"></i>
         </button>
 
         <div class="carousel-track" id="carouselTrack">
         </div>
 
-        <button class="carousel-arrow" id="nextNot" aria-label="Siguiente">
-          <i class="fas fa-chevron-right"></i>
+        <button class="carousel-arrow" id="nextNot" aria-label="Noticia siguiente">
+          <i class="fas fa-chevron-right" aria-hidden="true"></i>
         </button>
       </div>
 
@@ -84,7 +92,7 @@
     <section class="mas-prestados-section">
       <div class="mas-prestados-inner">
         <div class="section-heading">
-          <h2><i class="fas fa-fire"></i> Equipos Más Solicitados</h2>
+          <h2><i class="fas fa-fire" aria-hidden="true"></i> Equipos Más Solicitados</h2>
         </div>
 
         <div id="prestadosList" class="prestados-list"></div>
@@ -101,8 +109,8 @@
         <p>Dirección: Carretera Huejutla - Chalahuiyapa S/N Km. 3.5</p>
         <p>C.P. 43000, Huejutla de Reyes, Hidalgo, México</p>
         <p>Teléfono: 789 896 2083</p>
-        <button class="footer-map-btn" onclick="abrirMapaUTHH()" title="Ver ubicación en el mapa">
-          <i class="fas fa-map-marker-alt"></i> Ver ubicación
+        <button class="footer-map-btn" onclick="abrirMapaUTHH()" aria-label="Ver ubicación de la UTHH en el mapa">
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i> Ver ubicación
         </button>
       </div>
       <div class="footer-section">
@@ -119,30 +127,31 @@
     </div>
   </footer>
 
-  <div id="overlay"></div>
+    <div id="overlay"></div>
 
-  <div class="modal-login-wrapper" id="loginWrapper">
-    <button class="modal-close-btn" id="closeLoginBtn" aria-label="Cerrar">
-      <i class="fas fa-times"></i>
+  <div class="modal-login-wrapper" id="loginWrapper" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <button class="modal-close-btn" id="closeLoginBtn" aria-label="Cerrar ventana de inicio de sesión">
+      <i class="fas fa-times" aria-hidden="true"></i>
     </button>
 
     <div class="login-step" id="step-login">
-      <h2>Iniciar sesión</h2>
+      <h2 id="loginModalTitle">Iniciar sesión</h2>
       <div class="input-box">
-        <input type="email" id="lemail" placeholder=" ">
+        <input type="email" id="lemail" placeholder=" " autocomplete="email">
         <label for="lemail">Correo electrónico</label>
-        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+        <span class="input-icon" aria-hidden="true"><i class="fas fa-envelope" aria-hidden="true"></i></span>
       </div>
       <div class="input-box">
-        <input type="password" id="lpassword" placeholder=" ">
+        <input type="password" id="lpassword" placeholder=" " autocomplete="current-password">
         <label for="lpassword">Contraseña</label>
-        <span class="input-icon"><i class="fas fa-lock"></i></span>
+        <span class="input-icon" aria-hidden="true"><i class="fas fa-lock" aria-hidden="true"></i></span>
       </div>
+      <div id="recaptcha-login" class="g-recaptcha" style="margin:8px 0;transform:scale(0.88);transform-origin:0 0"></div>
       <button class="btn-submit" id="btnLoginSubmit">Iniciar sesión</button>
-      <p id="loginError" style="color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px"></p>
+      <p id="loginError" style="color:#c62828;font-size:.85em;text-align:center;margin-top:8px;min-height:18px" role="alert" aria-live="polite"></p>
       <div class="recuperar-link">
         <a href="#" data-step="recuperar">
-          <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+          <i class="fas fa-key" aria-hidden="true"></i> ¿Olvidaste tu contraseña?
         </a>
       </div>
     </div>
@@ -153,29 +162,33 @@
         Ingresa tu correo para continuar
       </p>
       <div class="input-box">
-        <input type="email" placeholder=" ">
-        <label>Correo electrónico</label>
-        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+        <input type="email" id="recEmail" placeholder=" " autocomplete="email">
+        <label for="recEmail">Correo electrónico</label>
+        <span class="input-icon" aria-hidden="true"><i class="fas fa-envelope" aria-hidden="true"></i></span>
       </div>
-      <button class="btn-submit">Continuar</button>
+      <div id="recaptcha-recuperar" class="g-recaptcha" style="margin:8px 0;transform:scale(0.88);transform-origin:0 0"></div>
+      <button class="btn-submit" id="btnRecuperar">Continuar</button>
+      <p id="recMsg" style="font-size:.85em;text-align:center;margin-top:8px;min-height:18px" role="alert" aria-live="polite"></p>
       <div class="recuperar-link">
-        <a href="#" data-step="login"><i class="fas fa-arrow-left"></i> Volver al login</a>
+        <a href="#" data-step="login"><i class="fas fa-arrow-left" aria-hidden="true"></i> Volver</a>
       </div>
     </div>
   </div>
 
-  <div class="modal-noticia-bg" id="modalNoticia">
+
+
+  <div class="modal-noticia-bg" id="modalNoticia" role="dialog" aria-modal="true" aria-labelledby="modalNoticiaTitulo">
     <div class="modal-noticia-box">
       <div class="modal-noticia-img">
-        <img id="modalNoticiaImg" src="" alt="">
-        <button class="modal-noticia-close" onclick="cerrarNoticia()">
-          <i class="fas fa-times"></i>
+        <img id="modalNoticiaImg" src="" alt="" role="presentation">
+        <button class="modal-noticia-close" onclick="cerrarNoticia()" aria-label="Cerrar noticia">
+          <i class="fas fa-times" aria-hidden="true"></i>
         </button>
       </div>
       <div class="modal-noticia-body">
-        <h2 id="modalNoticiaTitulo"></h2>
+        <h2 id="modalNoticiaTitulo" aria-live="polite">&#8203;</h2>
         <div class="modal-noticia-fecha">
-          <i class="far fa-calendar-alt"></i>
+          <i class="far fa-calendar-alt" aria-hidden="true"></i>
           <span id="modalNoticiaFecha"></span>
         </div>
         <div class="modal-noticia-contenido" id="modalNoticiaContenido"></div>
@@ -183,7 +196,7 @@
     </div>
   </div>
   <script>
-    const API_URL = 'https://apiprestamos-1.onrender.com';
+    const API_URL = 'https://api-prestamos-mfr4.onrender.com';
 
     function actualizarHeaderSesion() {
       const userData = sessionStorage.getItem('appUser');
@@ -209,7 +222,7 @@
         const panelIcon  = user.type === 'admin' ? 'fa-tachometer-alt' : 'fa-box';
         document.getElementById('userPanelLink').innerHTML =
           `<a href="${panelHref}" style="display:block;padding:10px 16px;font-size:.88em;color:#1a237e;font-weight:600;text-decoration:none">
-             <i class="fas ${panelIcon}" style="margin-right:8px"></i>${panelLabel}
+             <i class="fas ${panelIcon}" style="margin-right:8px" aria-hidden="true"></i>${panelLabel}
            </a>`;
       } else {
         loginBtn.style.display = '';
@@ -219,12 +232,17 @@
 
     document.getElementById('userMenuToggle')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      const dd = document.getElementById('userDropdownMenu');
-      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+      const dd  = document.getElementById('userDropdownMenu');
+      const btn = document.getElementById('userMenuToggle');
+      const open = dd.style.display === 'none';
+      dd.style.display = open ? 'block' : 'none';
+      btn.setAttribute('aria-expanded', String(open));
     });
     document.addEventListener('click', () => {
-      const dd = document.getElementById('userDropdownMenu');
-      if (dd) dd.style.display = 'none';
+      const dd  = document.getElementById('userDropdownMenu');
+      const btn = document.getElementById('userMenuToggle');
+      if (dd)  dd.style.display = 'none';
+      if (btn) btn.setAttribute('aria-expanded', 'false');
     });
 
     document.getElementById('headerLogoutBtn')?.addEventListener('click', () => {
@@ -242,6 +260,11 @@
 
       if (!correo || !contrasena) {
         errorEl.textContent = 'Ingresa correo y contraseña.';
+        return;
+      }
+      const captchaLogin = grecaptcha.getResponse(widgetLogin);
+      if (!captchaLogin) {
+        errorEl.textContent = 'Por favor completa la verificación de seguridad.';
         return;
       }
       errorEl.textContent = '';
@@ -271,9 +294,11 @@
             window.location.href = 'pages/usuario/mis_prestamos.html';
           }
         } else {
+          grecaptcha.reset(widgetLogin);
           errorEl.textContent = data.message || 'Credenciales incorrectas.';
         }
       } catch (err) {
+        grecaptcha.reset(widgetLogin);
         errorEl.textContent = 'Error de conexión con el servidor.';
       } finally {
         btn.disabled = false;
@@ -312,7 +337,7 @@
                   alt="${n.titulo}" loading="lazy"
                   onerror="this.src='img/picture.png'">
               <span class="noticia-fecha-badge">
-                <i class="far fa-calendar-alt"></i>
+                <i class="far fa-calendar-alt" aria-hidden="true"></i>
                 ${new Date(n.fecha_publicacion).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}
               </span>
             </div>
@@ -322,7 +347,7 @@
                 <p>${n.descripcion}</p>
               </div>
               <button class="btn-leer-mas" onclick="verNoticia(${i})">
-                Leer más <i class="fas fa-arrow-right"></i>
+                Leer más <i class="fas fa-arrow-right" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -330,7 +355,7 @@
       `).join('');
 
       dotsEl.innerHTML = _noticias.map((_, i) =>
-        `<span class="dot ${i === 0 ? 'active' : ''}" onclick="irSlide(${i})"></span>`
+        `<button class="dot ${i === 0 ? 'active' : ''}" onclick="irSlide(${i})" aria-label="Ir a noticia ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}"></button>`
       ).join('');
 
       setInterval(() => irSlide((slideIdx + 1) % _noticias.length), 6000);
@@ -340,7 +365,10 @@
       const slides = document.querySelectorAll('.carousel-slide');
       const dots   = document.querySelectorAll('.dot');
       slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-      dots.forEach((d, i)   => d.classList.toggle('active', i === idx));
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === idx);
+        d.setAttribute('aria-current', i === idx ? 'true' : 'false');
+      });
       slideIdx = idx;
     }
 
@@ -423,7 +451,7 @@
                 <div class="prestado-desc">${e.descripcion || ''}</div>
               </div>
               <div class="prestado-right">
-                <span class="badge ${badgeClass(e.disponibilidad)}">${badgeText(e.disponibilidad)}</span>
+                <span class="badge ${badgeClass(e.disponibilidad)}" style="font-size:14px">${badgeText(e.disponibilidad)}</span>
               </div>
             </div>
           </a>`;
@@ -449,6 +477,7 @@
       btn.addEventListener('click', e => {
         e.preventDefault();
         document.querySelectorAll('.login-step').forEach(el => el.hidden = true);
+        if (typeof grecaptcha !== 'undefined' && widgetLogin !== undefined) { grecaptcha.reset(widgetLogin); grecaptcha.reset(widgetRecuperar); }
         document.getElementById('step-' + btn.dataset.step).hidden = false;
       });
     });
@@ -456,6 +485,67 @@
     actualizarHeaderSesion();
     cargarNoticias();
     cargarEquipos();
+
+    let widgetLogin, widgetRecuperar;
+    window.onRecaptchaLoad = function() {
+      widgetLogin     = grecaptcha.render('recaptcha-login',     { sitekey: '6LeVgrEsAAAAAKiTJYplJQpH0Y8ior9r7I2jdh0Y' });
+      widgetRecuperar = grecaptcha.render('recaptcha-recuperar', { sitekey: '6LeVgrEsAAAAAKiTJYplJQpH0Y8ior9r7I2jdh0Y' });
+      setTimeout(function() {
+        document.querySelectorAll('.g-recaptcha textarea').forEach(function(ta) {
+          if (!ta.id) ta.id = 'g-recaptcha-response-' + Math.random().toString(36).slice(2);
+          if (!document.querySelector('label[for="' + ta.id + '"]')) {
+            var lbl = document.createElement('label');
+            lbl.setAttribute('for', ta.id);
+            lbl.textContent = 'Verificación reCAPTCHA';
+            lbl.className = 'visually-hidden';
+            ta.parentNode.insertBefore(lbl, ta);
+          }
+        });
+      }, 1000);
+    };
+
+    document.getElementById('btnRecuperar').addEventListener('click', async () => {
+      const correo = document.getElementById('recEmail').value.trim();
+      const btn    = document.getElementById('btnRecuperar');
+      const msg    = document.getElementById('recMsg');
+
+      if (!correo) { msg.textContent = 'Ingresa tu correo electrónico.'; msg.style.color='#c62828'; return; }
+
+      const captchaRec = grecaptcha.getResponse(widgetRecuperar);
+      if (!captchaRec) {
+        msg.textContent = 'Por favor completa la verificación de seguridad.';
+        msg.style.color = '#c62828';
+        return;
+      }
+
+      msg.textContent = '';
+      btn.disabled    = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res  = await fetch(`${API_URL}/api/auth/forgot-password`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ correo })
+        });
+        const data = await res.json();
+        msg.style.color = '#067D62';
+        msg.textContent = data.message;
+        grecaptcha.reset(widgetRecuperar);
+        setTimeout(() => {
+          document.getElementById('step-recuperar').hidden = true;
+          document.getElementById('step-login').hidden     = false;
+          msg.textContent = '';
+        }, 2500);
+      } catch {
+        grecaptcha.reset(widgetRecuperar);
+        msg.style.color = '#c62828';
+        msg.textContent = 'Error al enviar. Intenta de nuevo.';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Continuar';
+      }
+    });
   </script>
 
 <script src="js/mapa-uthh.js"></script>

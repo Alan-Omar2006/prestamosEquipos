@@ -47,6 +47,9 @@
           <i class="fas fa-search"></i>
           <input type="text" id="searchUser" placeholder="Buscar por nombre, matrícula o correo...">
         </div>
+        <a href="reportes_usuarios.html" class="btn btn-outline btn-sm" style="margin-left:auto;white-space:nowrap">
+          <i class="fas fa-chart-line"></i> Análisis de usuarios
+        </a>
       </div>
       <div class="table-wrapper">
         <table id="tablaUsuarios">
@@ -170,6 +173,23 @@
     });
     if (!conf.isConfirmed) return;
     try {
+      /* PU-02 / PI-06: Verificar préstamos activos antes de eliminar */
+      const prestamos = await fetch(`${API_URL}/api/prestamos`, { headers: authHeaders() }).then(r => r.json());
+      if (Array.isArray(prestamos)) {
+        const tieneActivos = prestamos.some(p =>
+          p.id_usuario === id &&
+          ['ACTIVO', 'EN PROCESO'].includes((p.estado_prestamo || '').toUpperCase())
+        );
+        if (tieneActivos) {
+          await Swal.fire({
+            icon: 'warning',
+            title: 'No se puede eliminar',
+            text: 'No se puede eliminar al usuario porque tiene préstamos activos asociados. Primero gestiona sus préstamos pendientes.',
+            confirmButtonColor: '#1a237e'
+          });
+          return;
+        }
+      }
       const res = await fetch(`${API_URL}/api/usuarios/${id}`, {
         method: 'DELETE', headers: authHeaders()
       }).then(r => r.json());

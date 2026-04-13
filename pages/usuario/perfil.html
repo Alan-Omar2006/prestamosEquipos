@@ -14,8 +14,35 @@
     .field-error { color:#c62828;font-size:.82em;margin-top:4px;display:none }
     .field-error.show { display:block }
     .form-control.error { border-color:#c62828;border-width:2px }
-    .req-note { background:#fff3e0; border-left:4px solid #ff9800; padding:8px 12px; border-radius:6px; font-size:.8em; margin-top:4px; }
     @media(max-width:700px){ .perfil-grid{grid-template-columns:1fr;} }
+
+    /* Validador de contraseña */
+    .pass-input-wrap { position:relative }
+    .pass-input-wrap .toggle-vis {
+      position:absolute;right:10px;top:50%;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;color:#888;padding:0;font-size:14px;
+    }
+    .pass-input-wrap .form-control { padding-right:34px }
+    .strength-bar {
+      height:3px;border-radius:2px;background:#e0e0e0;margin:5px 0 10px;overflow:hidden;
+    }
+    .strength-bar-fill { height:100%;border-radius:2px;width:0%;transition:width .3s,background .3s }
+    .req-list { list-style:none;padding:0;margin:0 0 0;display:flex;flex-direction:column;gap:4px }
+    .req-list li {
+      display:flex;align-items:center;gap:7px;font-size:.78em;color:#999;transition:color .2s;
+    }
+    .req-list li .dot {
+      width:11px;height:11px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;
+      transition:background .2s,border-color .2s;
+    }
+    .req-list li.pass { color:#2e7d32 }
+    .req-list li.pass .dot { background:#4caf50;border-color:#4caf50 }
+    .req-list li.fail { color:#c62828 }
+    .req-list li.fail .dot { background:#ef5350;border-color:#ef5350 }
+    .req-list li.optional .dot { border-style:dashed }
+    .req-list li.optional.pass { color:#2e7d32 }
+    .req-list li.optional.pass .dot { background:#4caf50;border-color:#4caf50;border-style:solid }
+    .conf-msg-inline { font-size:.78em;min-height:14px;margin:3px 0 0 }
   </style>
 </head>
 <body>
@@ -88,6 +115,8 @@
   inyectarHeaderUsuario(user);
   inyectarFooterUsuario();
 
+  const PASS_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
   async function cargarPerfil() {
     try {
       const res = await fetch(`${API_URL}/api/auth/perfil`, { headers: authHeaders() });
@@ -123,20 +152,21 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Nombre *</label>
-          <input type="text" class="form-control" id="pNombre" value="${d.nombre || ''}" maxlength="100">
-          <p class="field-error" id="error-nombre">El nombre es obligatorio</p>
+          <label class="form-label">Nombre</label>
+          <input type="text" class="form-control" value="${d.nombre || ''}" disabled
+            style="background:#f5f5f5;color:#888;cursor:not-allowed">
         </div>
         <div class="form-group">
-          <label class="form-label">Apellido Paterno *</label>
-          <input type="text" class="form-control" id="pApellidoP" value="${d.apellido_p || ''}" maxlength="100">
-          <p class="field-error" id="error-apellido-p">El apellido paterno es obligatorio</p>
+          <label class="form-label">Apellido Paterno</label>
+          <input type="text" class="form-control" value="${d.apellido_p || ''}" disabled
+            style="background:#f5f5f5;color:#888;cursor:not-allowed">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Apellido Materno</label>
-          <input type="text" class="form-control" id="pApellidoM" value="${d.apellido_m || ''}" maxlength="100">
+          <input type="text" class="form-control" value="${d.apellido_m || ''}" disabled
+            style="background:#f5f5f5;color:#888;cursor:not-allowed">
         </div>
         <div class="form-group">
           <label class="form-label">Matrícula</label>
@@ -156,15 +186,39 @@
 
       <hr style="margin:24px 0;border:none;border-top:1px solid #eef0f8">
       <p style="font-size:.9em;font-weight:700;color:var(--primary);margin-bottom:16px">Cambiar contraseña</p>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nueva contraseña</label>
-          <input type="password" class="form-control" id="pPass" maxlength="100" placeholder="Dejar vacío para no cambiar">
-          <p class="field-error" id="error-pass">Mínimo 6 caracteres</p>
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="pPass" maxlength="100"
+                   placeholder="Dejar vacío para no cambiar"
+                   oninput="onPerfilPassInput(this.value)">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="togglePerfilVis('pPass',this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="strength-bar" id="perfilStrengthBar" style="display:none">
+            <div class="strength-bar-fill" id="perfilStrengthFill"></div>
+          </div>
+          <ul class="req-list" id="perfilReqList" style="display:none;margin-top:6px">
+            <li id="preq-len"     class=""><span class="dot"></span>Mínimo 8 caracteres</li>
+            <li id="preq-upper"   class=""><span class="dot"></span>Al menos una mayúscula</li>
+            <li id="preq-num"     class=""><span class="dot"></span>Al menos un número</li>
+            <li id="preq-special" class="optional"><span class="dot"></span>Carácter especial (opcional)</li>
+          </ul>
+          <p class="field-error" id="error-pass">La contraseña no cumple los requisitos</p>
         </div>
         <div class="form-group">
           <label class="form-label">Confirmar contraseña</label>
-          <input type="password" class="form-control" id="pPassConf" maxlength="100">
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="pPassConf" maxlength="100"
+                   oninput="onPerfilConfInput()">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="togglePerfilVis('pPassConf',this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <p class="conf-msg-inline" id="perfil-conf-msg"></p>
           <p class="field-error" id="error-pass-conf">Las contraseñas no coinciden</p>
         </div>
       </div>
@@ -194,6 +248,71 @@
     );
   }
 
+  function setPreq(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = cls;
+  }
+
+  function onPerfilPassInput(val) {
+    const bar  = document.getElementById('perfilStrengthBar');
+    const reqs = document.getElementById('perfilReqList');
+    if (!bar || !reqs) return;
+
+    if (val) { bar.style.display='block'; reqs.style.display='flex'; }
+    else     { bar.style.display='none';  reqs.style.display='none'; }
+
+    const checks = {
+      len:     val.length >= 8,
+      upper:   /[A-Z]/.test(val),
+      num:     /\d/.test(val),
+      special: /[^A-Za-z0-9]/.test(val)
+    };
+
+    if (!val) {
+      ['preq-len','preq-upper','preq-num'].forEach(id => setPreq(id, ''));
+      setPreq('preq-special', 'optional');
+    } else {
+      setPreq('preq-len',     checks.len     ? 'pass' : 'fail');
+      setPreq('preq-upper',   checks.upper   ? 'pass' : 'fail');
+      setPreq('preq-num',     checks.num     ? 'pass' : 'fail');
+      setPreq('preq-special', checks.special ? 'optional pass' : 'optional');
+    }
+
+    const score  = [checks.len, checks.upper, checks.num, checks.special].filter(Boolean).length;
+    const widths = ['0%','33%','58%','80%','100%'];
+    const colors = ['transparent','#ef5350','#ff9800','#66bb6a','#2e7d32'];
+    const fill   = document.getElementById('perfilStrengthFill');
+    if (fill) {
+      fill.style.width      = val ? widths[score] : '0%';
+      fill.style.background = val ? colors[score] : 'transparent';
+    }
+
+    onPerfilConfInput();
+  }
+
+  function onPerfilConfInput() {
+    const p   = document.getElementById('pPass')?.value     || '';
+    const c   = document.getElementById('pPassConf')?.value || '';
+    const msg = document.getElementById('perfil-conf-msg');
+    if (!msg) return;
+    if (!c) { msg.textContent = ''; return; }
+    if (p === c) { msg.style.color = '#2e7d32'; msg.textContent = '✓ Coinciden'; }
+    else         { msg.style.color = '#c62828'; msg.textContent = 'No coinciden'; }
+  }
+
+  function togglePerfilVis(id, btn) {
+    const inp  = document.getElementById(id);
+    const icon = btn?.querySelector('i');
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon?.classList.replace('fa-eye','fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      icon?.classList.replace('fa-eye-slash','fa-eye');
+    }
+  }
+
   function initFotoUpload() {
     const inputEl   = document.getElementById('fotoFile');
     const previewEl = document.getElementById('fotoPreview');
@@ -210,8 +329,6 @@
         }
         hidden.value = url;
         if (status) { status.textContent = '✓ Foto lista para guardar'; status.style.color = '#2e7d32'; }
-        // Actualizar el avatar del header
-
         document.querySelectorAll('.user-avatar').forEach(img => img.src = url);
       } else {
         if (status) { status.textContent = error || 'Error al subir'; status.style.color = '#c62828'; }
@@ -220,9 +337,6 @@
   }
 
   async function guardarPerfil() {
-    const nombre   = document.getElementById('pNombre')?.value.trim()   || '';
-    const apellidoP= document.getElementById('pApellidoP')?.value.trim()|| '';
-    const apellidoM= document.getElementById('pApellidoM')?.value.trim()|| '';
     const telefono = document.getElementById('pTelefono')?.value.trim() || '';
     const pass     = document.getElementById('pPass')?.value            || '';
     const passConf = document.getElementById('pPassConf')?.value        || '';
@@ -234,17 +348,7 @@
     errorEl.textContent = '';
 
     let valid = true;
-    if (!nombre) {
-      document.getElementById('pNombre').classList.add('error');
-      document.getElementById('error-nombre').classList.add('show');
-      valid = false;
-    }
-    if (!apellidoP) {
-      document.getElementById('pApellidoP').classList.add('error');
-      document.getElementById('error-apellido-p').classList.add('show');
-      valid = false;
-    }
-    if (pass && pass.length < 6) {
+    if (pass && !PASS_RE.test(pass)) {
       document.getElementById('pPass').classList.add('error');
       document.getElementById('error-pass').classList.add('show');
       valid = false;
@@ -256,7 +360,7 @@
     }
     if (!valid) return;
 
-    const body = { nombre, apellido_p: apellidoP, apellido_m: apellidoM, telefono };
+    const body = { telefono };
     if (imagen) body.imagen_url = imagen;
     if (pass)   body.contrasena = pass;
 

@@ -13,6 +13,19 @@
     .form-control.error{border-color:#c62828}
     .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
     @media(max-width:640px){.grid-3{grid-template-columns:1fr}}
+    .pass-input-wrap{position:relative}
+    .pass-input-wrap .toggle-vis{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;padding:0;font-size:14px}
+    .pass-input-wrap .form-control{padding-right:34px}
+    .strength-bar{height:3px;border-radius:2px;background:#e0e0e0;margin:5px 0 8px;overflow:hidden}
+    .strength-bar-fill{height:100%;border-radius:2px;width:0%;transition:width .3s,background .3s}
+    .req-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+    .req-list li{display:flex;align-items:center;gap:7px;font-size:.78em;color:#999;transition:color .2s}
+    .req-list li .dot{width:11px;height:11px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;transition:background .2s,border-color .2s}
+    .req-list li.pass{color:#2e7d32}.req-list li.pass .dot{background:#4caf50;border-color:#4caf50}
+    .req-list li.fail{color:#c62828}.req-list li.fail .dot{background:#ef5350;border-color:#ef5350}
+    .req-list li.optional .dot{border-style:dashed}
+    .req-list li.optional.pass{color:#2e7d32}.req-list li.optional.pass .dot{background:#4caf50;border-color:#4caf50;border-style:solid}
+    .conf-msg-inline{font-size:.78em;min-height:14px;margin:3px 0 0}
   </style>
 </head>
 <body>
@@ -97,11 +110,13 @@
           <input type="text" class="form-control" id="uMatricula" value="${u.Matricula||''}" ${matriculaAttrs}>
           <p class="field-error" id="error-matricula">La matr\u00edcula es obligatoria para alumnos</p>
           <p class="field-error" id="error-matricula-numeros">La matr\u00edcula solo puede contener n\u00fameros</p>
+          <p class="field-error" id="error-matricula-duplicada">La matr\u00edcula ya est\u00e1 registrada por otro usuario</p>
         </div>
         <div class="form-group">
           <label class="form-label">Teléfono</label>
           <input type="text" class="form-control" id="uTel" value="${u.telefono||''}" maxlength="10" placeholder="10 dígitos">
           <p class="field-error" id="error-telefono">El teléfono debe tener 10 dígitos numéricos</p>
+          <p class="field-error" id="error-telefono-duplicado">El teléfono ya está registrado por otro usuario</p>
         </div>
       </div>
       <div class="form-group">
@@ -119,12 +134,26 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="form-group">
           <label class="form-label">Nueva contraseña <span style="color:#aaa;font-weight:400">(opcional)</span></label>
-          <input type="password" class="form-control" id="uPass" placeholder="Mínimo 6 caracteres" maxlength="255">
-          <p class="field-error" id="error-pass">La contraseña debe tener al menos 6 caracteres</p>
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="uPass" placeholder="Dejar vacío para no cambiar" maxlength="255" oninput="onEditPassInput(this.value)">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="toggleEditVis('uPass',this)"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="strength-bar" id="editStrengthBar" style="display:none"><div class="strength-bar-fill" id="editStrengthFill"></div></div>
+          <ul class="req-list" id="editReqList" style="display:none;margin-top:4px">
+            <li id="ereq-len" class=""><span class="dot"></span>Mínimo 8 caracteres</li>
+            <li id="ereq-upper" class=""><span class="dot"></span>Al menos una mayúscula</li>
+            <li id="ereq-num" class=""><span class="dot"></span>Al menos un número</li>
+            <li id="ereq-special" class="optional"><span class="dot"></span>Carácter especial (opcional)</li>
+          </ul>
+          <p class="field-error" id="error-pass">La contraseña no cumple los requisitos</p>
         </div>
         <div class="form-group">
           <label class="form-label">Confirmar contraseña</label>
-          <input type="password" class="form-control" id="uPassConf" placeholder="Repetir contraseña" maxlength="255">
+          <div class="pass-input-wrap">
+            <input type="password" class="form-control" id="uPassConf" placeholder="Repetir contraseña" maxlength="255" oninput="onEditConfInput()">
+            <button class="toggle-vis" type="button" tabindex="-1" onclick="toggleEditVis('uPassConf',this)"><i class="fas fa-eye"></i></button>
+          </div>
+          <p class="conf-msg-inline" id="edit-conf-msg"></p>
           <p class="field-error" id="error-pass-conf">Las contraseñas no coinciden</p>
         </div>
       </div>
@@ -172,10 +201,48 @@
 
     if(telefono && !/^\d{10}$/.test(telefono)){document.getElementById('uTel').classList.add('error');document.getElementById('error-telefono').classList.add('show');valid=false;}
     if(!correo||!emailRe.test(correo)){document.getElementById('uCorreo').classList.add('error');document.getElementById('error-correo').classList.add('show');valid=false;}
-    if(pass && pass.length<6){document.getElementById('uPass').classList.add('error');document.getElementById('error-pass').classList.add('show');valid=false;}
+    if(pass && !PASS_RE.test(pass)){document.getElementById('uPass').classList.add('error');document.getElementById('error-pass').classList.add('show');valid=false;}
     if(pass && pass!==passConf){document.getElementById('uPassConf').classList.add('error');document.getElementById('error-pass-conf').classList.add('show');valid=false;}
 
     if(!valid){document.querySelector('#formWrap .error')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+
+    /* PI-07: Verificar correo, matrícula y teléfono únicos contra otros usuarios */
+    try {
+      const todosUsr = await fetch(`${API_URL}/api/usuarios`, { headers: authHeaders() }).then(r => r.json());
+      if (Array.isArray(todosUsr)) {
+        const otrosUsr = todosUsr.filter(u => u.id_usuario !== parseInt(id));
+
+        const correoExiste = otrosUsr.some(u => (u.correo || '').toLowerCase() === correo.toLowerCase());
+        if (correoExiste) {
+          document.getElementById('uCorreo').classList.add('error');
+          document.getElementById('error-correo-duplicado').classList.add('show');
+          document.getElementById('uCorreo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        if (tipoUsuario === 'ALUMNO' && Matricula) {
+          const matExiste = otrosUsr.some(u => (u.Matricula || '').trim() === Matricula.trim());
+          if (matExiste) {
+            document.getElementById('uMatricula').classList.add('error');
+            const errMat = document.getElementById('error-matricula');
+            errMat.textContent = 'La matrícula ya está registrada por otro usuario.';
+            errMat.classList.add('show');
+            document.getElementById('uMatricula').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+
+        if (telefono) {
+          const telExiste = otrosUsr.some(u => (u.telefono || '').trim() === telefono.trim());
+          if (telExiste) {
+            document.getElementById('uTel').classList.add('error');
+            document.getElementById('error-telefono-duplicado').classList.add('show');
+            document.getElementById('uTel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+      }
+    } catch(e) { /* si falla la consulta se deja pasar al servidor */ }
 
     const conf=await Swal.fire({title:'¿Guardar cambios?',text:`Se actualizará el usuario ${nombre} ${apellido_p}.`,icon:'question',showCancelButton:true,confirmButtonColor:'#1a237e',cancelButtonColor:'#757575',confirmButtonText:'Sí, guardar',cancelButtonText:'Cancelar'});
     if(!conf.isConfirmed)return;
@@ -209,6 +276,51 @@
     const conf=await Swal.fire({title:'¿Cancelar?',text:'Los cambios no se guardarán.',icon:'warning',showCancelButton:true,confirmButtonColor:'#c62828',cancelButtonColor:'#757575',confirmButtonText:'Sí, salir',cancelButtonText:'Seguir editando'});
     if(conf.isConfirmed)window.location.href='usuarios.html';
   }
+  const PASS_RE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+  function setEreq(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = cls;
+  }
+
+  function onEditPassInput(val) {
+    const bar  = document.getElementById('editStrengthBar');
+    const list = document.getElementById('editReqList');
+    if (!bar || !list) return;
+    if (val) { bar.style.display='block'; list.style.display='flex'; }
+    else     { bar.style.display='none';  list.style.display='none'; }
+    const checks = { len: val.length>=8, upper:/[A-Z]/.test(val), num:/\d/.test(val), special:/[^A-Za-z0-9]/.test(val) };
+    if (!val) { ['ereq-len','ereq-upper','ereq-num'].forEach(id=>setEreq(id,'')); setEreq('ereq-special','optional'); }
+    else {
+      setEreq('ereq-len',   checks.len   ?'pass':'fail');
+      setEreq('ereq-upper', checks.upper ?'pass':'fail');
+      setEreq('ereq-num',   checks.num   ?'pass':'fail');
+      setEreq('ereq-special', checks.special?'optional pass':'optional');
+    }
+    const score=[checks.len,checks.upper,checks.num,checks.special].filter(Boolean).length;
+    const fill=document.getElementById('editStrengthFill');
+    if(fill){ fill.style.width=val?['0%','33%','58%','80%','100%'][score]:'0%'; fill.style.background=val?['transparent','#ef5350','#ff9800','#66bb6a','#2e7d32'][score]:'transparent'; }
+    onEditConfInput();
+  }
+
+  function onEditConfInput() {
+    const p=document.getElementById('uPass')?.value||'';
+    const c=document.getElementById('uPassConf')?.value||'';
+    const msg=document.getElementById('edit-conf-msg');
+    if(!msg)return;
+    if(!c){msg.textContent='';return;}
+    if(p===c){msg.style.color='#2e7d32';msg.textContent='✓ Coinciden';}
+    else{msg.style.color='#c62828';msg.textContent='No coinciden';}
+  }
+
+  function toggleEditVis(id, btn) {
+    const inp=document.getElementById(id);
+    const icon=btn?.querySelector('i');
+    if(!inp)return;
+    if(inp.type==='password'){inp.type='text';icon?.classList.replace('fa-eye','fa-eye-slash');}
+    else{inp.type='password';icon?.classList.replace('fa-eye-slash','fa-eye');}
+  }
+
   cargarUsuario();
 </script>
 <footer>

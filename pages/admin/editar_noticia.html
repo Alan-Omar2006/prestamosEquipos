@@ -70,25 +70,6 @@
     const activaChecked = n.activa ? 'checked' : '';
     document.getElementById('formWrap').innerHTML = `
       <div class="form-group">
-        <label class="form-label">Título <span style="color:#c62828">*</span></label>
-        <input type="text" class="form-control" id="nTitulo" value="${(n.titulo||'').replace(/"/g,'&quot;')}" maxlength="200">
-        <p class="counter"><span id="cntTitulo">${(n.titulo||'').length}</span>/200 caracteres</p>
-        <p class="field-error" id="error-titulo">El título es obligatorio y debe tener al menos 5 caracteres</p>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Descripción <span style="color:#c62828">*</span></label>
-        <textarea class="form-control" id="nDesc" rows="3" maxlength="500">${n.descripcion||''}</textarea>
-        <p class="counter"><span id="cntDesc">${(n.descripcion||'').length}</span>/500 caracteres</p>
-        <p class="field-error" id="error-descripcion">La descripción es obligatoria y debe tener al menos 10 caracteres</p>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Contenido completo <span style="color:#aaa;font-weight:400">(opcional)</span></label>
-        <textarea class="form-control" id="nContenido" rows="5">${n.contenido||''}</textarea>
-      </div>
-
-      <div class="form-group">
         <label class="form-label">Imagen (JPG / PNG / WEBP - máx 5 MB)</label>
         <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
           <div style="flex-shrink:0">
@@ -107,6 +88,25 @@
         </div>
       </div>
       <input type="hidden" id="imagenUrl" value="${n.imagen_url||''}">
+
+      <div class="form-group">
+        <label class="form-label">Título <span style="color:#c62828">*</span></label>
+        <input type="text" class="form-control" id="nTitulo" value="${(n.titulo||'').replace(/"/g,'&quot;')}" maxlength="200">
+        <p class="counter"><span id="cntTitulo">${(n.titulo||'').length}</span>/200 caracteres</p>
+        <p class="field-error" id="error-titulo">El título es obligatorio y debe tener al menos 5 caracteres</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descripción <span style="color:#c62828">*</span></label>
+        <textarea class="form-control" id="nDesc" rows="3" maxlength="500">${n.descripcion||''}</textarea>
+        <p class="counter"><span id="cntDesc">${(n.descripcion||'').length}</span>/500 caracteres</p>
+        <p class="field-error" id="error-descripcion">La descripción es obligatoria y debe tener al menos 10 caracteres</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Contenido completo <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+        <textarea class="form-control" id="nContenido" rows="5">${n.contenido||''}</textarea>
+      </div>
 
       <div class="form-group">
         <div class="checkbox-wrap">

@@ -88,6 +88,7 @@
               <label class="form-label">Teléfono</label>
               <input type="text" class="form-control" id="telefono" maxlength="10" placeholder="10 dígitos">
               <p class="field-error" id="error-telefono">El teléfono debe tener 10 dígitos numéricos</p>
+              <p class="field-error" id="error-telefono-duplicado">El teléfono ya está registrado en el sistema</p>
             </div>
           </div>
         </div>
@@ -96,6 +97,8 @@
           <label class="form-label">Correo electrónico <span style="color:#c62828">*</span></label>
           <input type="email" class="form-control" id="correo" maxlength="100" placeholder="ejemplo@uthh.edu.mx">
           <p class="field-error" id="error-correo">Debe ingresar un correo electrónico válido</p>
+          <p class="field-error" id="error-correo-institucional">El correo debe ser institucional (@uthh.edu.mx)</p>
+          <p class="field-error" id="error-correo-duplicado">El correo ya está registrado en el sistema</p>
         </div>
 
         <div id="info-box-container" class="info-box" style="display:none">
@@ -189,11 +192,47 @@
 
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!correo || !emailRe.test(correo)) { marcarCampo('correo'); mostrarError('error-correo'); valid = false; }
+    else if (!correo.toLowerCase().endsWith('@uthh.edu.mx')) { marcarCampo('correo'); mostrarError('error-correo-institucional'); valid = false; }
 
     if (!valid) {
       document.querySelector('.error')?.scrollIntoView({ behavior:'smooth', block:'center' });
       return;
     }
+
+    /* Verificar correo, matrícula y teléfono duplicados antes de confirmar */
+    try {
+      const todosUsr = await fetch(`${API_URL}/api/usuarios`, { headers: authHeaders() }).then(r => r.json());
+      if (Array.isArray(todosUsr)) {
+        const correoExiste = todosUsr.some(u => (u.correo || '').toLowerCase() === correo.toLowerCase());
+        if (correoExiste) {
+          marcarCampo('correo');
+          mostrarError('error-correo-duplicado');
+          document.getElementById('correo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        if (tipo === 'ALUMNO' && matricula) {
+          const matExiste = todosUsr.some(u => (u.Matricula || '').trim() === matricula.trim());
+          if (matExiste) {
+            marcarCampo('matricula');
+            document.getElementById('error-matricula-numeros').classList.remove('show');
+            const errMat = document.getElementById('error-matricula');
+            errMat.textContent = 'La matrícula ya está registrada en el sistema.';
+            errMat.classList.add('show');
+            document.getElementById('matricula').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+        if (telefono) {
+          const telExiste = todosUsr.some(u => (u.telefono || '').trim() === telefono.trim());
+          if (telExiste) {
+            marcarCampo('telefono');
+            mostrarError('error-telefono-duplicado');
+            document.getElementById('telefono').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+      }
+    } catch(e) { /* si falla la consulta se deja pasar al servidor */ }
 
     const conf = await Swal.fire({
       title: '¿Registrar usuario?',

@@ -172,6 +172,23 @@
     });
     if (!conf.isConfirmed) return;
     try {
+      /* PU-05: Verificar si el equipo tiene préstamos activos */
+      const prestamos = await fetch(`${API_URL}/api/prestamos`, { headers: authHeaders() }).then(r => r.json());
+      if (Array.isArray(prestamos)) {
+        const enPrestamo = prestamos.some(p =>
+          p.id_equipo === id &&
+          ['ACTIVO', 'EN PROCESO'].includes((p.estado_prestamo || '').toUpperCase())
+        );
+        if (enPrestamo) {
+          await Swal.fire({
+            icon: 'warning',
+            title: 'No se puede eliminar',
+            text: 'El equipo tiene un préstamo activo en curso. Primero cierra o devuelve el préstamo antes de eliminar el equipo.',
+            confirmButtonColor: '#1a237e'
+          });
+          return;
+        }
+      }
       const res = await fetch(`${API_URL}/api/inventario/${id}`, {
         method: 'DELETE', headers: authHeaders()
       }).then(r => r.json());

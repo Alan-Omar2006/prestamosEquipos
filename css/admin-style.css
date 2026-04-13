@@ -337,11 +337,17 @@ main {
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-light) transparent;
 }
+.table-wrapper::-webkit-scrollbar { height: 5px; }
+.table-wrapper::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
 
 table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
 }
 
@@ -541,6 +547,7 @@ tbody td {
 
 .admin-content {
   flex: 1;
+  min-width: 0;
   padding: 40px 50px 72px;
   background: var(--bg);
   min-height: 100%;
@@ -894,3 +901,64 @@ footer {
 .mapa-ruta-btn { background: #2e7d32 !important; }
 .mapa-ruta-btn:hover { background: #1b5e20 !important; }
 .mapa-ruta-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+@media (min-width: 1600px) {
+  header { padding: 18px 100px; }
+}
+
+@media (max-width: 1200px) {
+  header { padding: 16px 32px; }
+}
+
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .footer-content { gap: 20px; }
+}
+
+@media (max-width: 768px) {
+  header { padding: 14px 16px; }
+  .header-title { display: none; }
+  .navigation { display: none; }
+  .breadcrumb { padding: 10px 16px; }
+  .page-banner { padding: 32px 16px; }
+  .container { padding: 0 14px; }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  footer { padding: 24px 16px 0; }
+  .footer-content { flex-direction: column; gap: 16px; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+  .admin-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    padding: 10px 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .admin-content { padding: 20px 14px; }
+  .filter-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .filter-row > * { width: 100%; }
+
+  /* Tablas en móvil */
+  thead th { padding: 10px 12px; font-size: 0.8em; white-space: nowrap; }
+  tbody td  { padding: 10px 12px; font-size: 0.83em; }
+  .td-actions { gap: 5px; }
+}
+
+@media (max-width: 600px) {
+  .logo-area img { width: 56px; height: 52px; }
+  .logo-text { display: none; }
+  .admin-content { padding: 16px 12px; }
+  thead th { padding: 9px 10px; font-size: 0.78em; }
+  tbody td  { padding: 9px 10px; font-size: .8em; }
+}
+
+@media (max-width: 480px) {
+  header { padding: 10px 12px; }
+  .admin-content { padding: 12px 10px; }
+  thead th { padding: 8px 9px; font-size: 0.75em; }
+  tbody td  { padding: 8px 9px; font-size: .77em; }
+}

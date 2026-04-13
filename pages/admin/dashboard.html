@@ -218,11 +218,23 @@
       confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
     });
     if (!conf.isConfirmed) return;
-    const res = await fetch(`${API_URL}/api/prestamos/${id}`, {
-      method: 'DELETE', headers: authHeaders()
-    }).then(r => r.json());
-    showToast(res.message || res.error, res.message ? 'success' : 'error');
-    if (res.message) cargarDashboard();
+    try {
+      const prestamo = await fetch(`${API_URL}/api/prestamos/${id}`, { headers: authHeaders() }).then(r => r.json());
+      if (prestamo && ['ACTIVO', 'EN PROCESO'].includes((prestamo.estado_prestamo || '').toUpperCase())) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'No se puede eliminar',
+          text: 'No se puede eliminar un préstamo que está activo o en proceso. Primero cámbialo a Devuelto o Cancelado.',
+          confirmButtonColor: '#1a237e'
+        });
+        return;
+      }
+      const res = await fetch(`${API_URL}/api/prestamos/${id}`, {
+        method: 'DELETE', headers: authHeaders()
+      }).then(r => r.json());
+      showToast(res.message || res.error, res.message ? 'success' : 'error');
+      if (res.message) cargarDashboard();
+    } catch(e) { showToast('Error de conexión.', 'error'); }
   }
 
   cargarDashboard();

@@ -167,10 +167,10 @@
     if(!id_tipo){document.getElementById('eTipo').classList.add('error');document.getElementById('error-tipo').classList.add('show');valid=false;}
     if(!modelo){document.getElementById('eModelo').classList.add('error');document.getElementById('error-modelo').classList.add('show');valid=false;}
     if(isNaN(stock)||stock<0){document.getElementById('eStock').classList.add('error');document.getElementById('error-stock').classList.add('show');valid=false;}
-    if(isNaN(disponibilidad)||disponibilidad<0||(!isNaN(stock)&&disponibilidad>stock)){
+    if(isNaN(disponibilidad)||disponibilidad<0||(!isNaN(stock)&&stock>=0&&disponibilidad>stock)){
       document.getElementById('eDisp').classList.add('error');
       const m=document.getElementById('error-disponibilidad');
-      m.textContent=disponibilidad>stock?'La disponibilidad no puede ser mayor que el stock':'La disponibilidad debe ser mayor o igual a 0';
+      m.textContent=disponibilidad<0?'La disponibilidad no puede ser negativa':disponibilidad>stock?'La disponibilidad no puede ser mayor que el stock':'La disponibilidad debe ser mayor o igual a 0';
       m.classList.add('show');valid=false;
     }
     if(!descripcion){document.getElementById('eDesc').classList.add('error');document.getElementById('error-descripcion').classList.add('show');valid=false;}

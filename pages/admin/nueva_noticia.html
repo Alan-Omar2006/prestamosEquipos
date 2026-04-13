@@ -44,6 +44,23 @@
       <div style="max-width:680px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px">
 
         <div class="form-group">
+          <label class="form-label">Imagen de la noticia <span style="color:#c62828">*</span></label>
+          <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+            <div style="flex-shrink:0">
+              <img id="imgPreview" src="../../img/picture.png" data-default="../../img/picture.png"
+                   style="width:160px;height:110px;object-fit:cover;border-radius:10px;border:2px dashed #ccc;background:#fafafa">
+              <p id="imgEstado" style="font-size:.78em;text-align:center;margin-top:4px;color:#aaa">Sin imagen</p>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <p style="font-size:.85em;color:#666;margin-bottom:8px">Selecciona un archivo JPG, PNG o WEBP (máx. 5 MB)</p>
+              <input type="file" id="inputImagen" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:block;width:100%">
+              <p class="field-error" id="errorImg" style="min-height:14px;margin-top:4px"></p>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="imagenUrl">
+
+        <div class="form-group">
           <label class="form-label">Título <span style="color:#c62828">*</span></label>
           <input type="text" class="form-control" id="nTitulo" maxlength="200"
                  placeholder="Ej: Nueva actualización del sistema de préstamos">
@@ -63,23 +80,6 @@
           <label class="form-label">Contenido completo <span style="color:#aaa;font-weight:400">(opcional)</span></label>
           <textarea class="form-control" id="nContenido" rows="5" placeholder="Texto completo de la noticia..."></textarea>
         </div>
-
-        <div class="form-group">
-          <label class="form-label">Imagen de la noticia <span style="color:#c62828">*</span></label>
-          <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
-            <div style="flex-shrink:0">
-              <img id="imgPreview" src="../../img/picture.png" data-default="../../img/picture.png"
-                   style="width:160px;height:110px;object-fit:cover;border-radius:10px;border:2px dashed #ccc;background:#fafafa">
-              <p id="imgEstado" style="font-size:.78em;text-align:center;margin-top:4px;color:#aaa">Sin imagen</p>
-            </div>
-            <div style="flex:1;min-width:200px">
-              <p style="font-size:.85em;color:#666;margin-bottom:8px">Selecciona un archivo JPG, PNG o WEBP (máx. 5 MB)</p>
-              <input type="file" id="inputImagen" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:block;width:100%">
-              <p class="field-error" id="errorImg" style="min-height:14px;margin-top:4px"></p>
-            </div>
-          </div>
-        </div>
-        <input type="hidden" id="imagenUrl">
 
         <p id="errorNot" style="color:#c62828;font-size:.85em;min-height:18px"></p>
         <div style="display:flex;gap:12px;margin-top:4px">
